@@ -4,10 +4,14 @@ import AppLayout from './layouts/AppLayout.jsx'
 import HomePage from '../pages/HomePage.jsx'
 import ScheduleDetailPage from '../pages/ScheduleDetailPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
+import LoginPage from '../pages/LoginPage.jsx'
+import SignupPage from '../pages/SignupPage.jsx'
 
 function App() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route element={<AppLayout />}>
         {/* 07 메인 대시보드: 월간 캘린더 + 오늘 할 일 (5번 /calendar, /schedule-items/today) */}
         <Route path="/" element={<HomePage />} />

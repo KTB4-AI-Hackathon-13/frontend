@@ -12,8 +12,8 @@
   --muted: #6f7685;
   --primary: #4a5568;
   --primary-text: #ffffff;
-  --accent: #5b6cff;
-  --accent-soft: #e9ecff;
+  --accent: #2f766d;
+  --accent-soft: #e2f1ee;
   --danger: #d64545;
   --success: #2f9e5f;
   --radius: 8px;
@@ -33,8 +33,8 @@
     --muted: #98a0b3;
     --primary: #cfd5e3;
     --primary-text: #13161d;
-    --accent: #8591ff;
-    --accent-soft: #2a3060;
+    --accent: #65b8ad;
+    --accent-soft: #183d39;
     --shadow: none;
   }
 }
@@ -113,6 +113,33 @@ button {
 .sidebar__link.is-disabled {
   color: var(--muted);
   cursor: not-allowed;
+}
+
+.sidebar__logout {
+  width: 100%;
+  margin-top: auto;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.sidebar__logout:hover:not(:disabled) {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--danger);
+}
+
+.sidebar__logout:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .shell__main {

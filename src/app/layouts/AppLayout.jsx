@@ -1,4 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+
+import { logout } from '../../features/auth/authApi.js'
 
 /** 와이어프레임 공통 왼쪽 사이드바. 구현되지 않은 메뉴는 비활성 (다른 담당자 영역). */
 const NAV = [
@@ -12,6 +15,21 @@ const NAV = [
 ]
 
 function AppLayout() {
+  const navigate = useNavigate()
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      window.alert(error.message || '로그아웃에 실패했습니다.')
+      setLoggingOut(false)
+    }
+  }
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -36,6 +54,15 @@ function AppLayout() {
             ),
           )}
         </nav>
+        <button
+          type="button"
+          className="sidebar__logout"
+          onClick={handleLogout}
+          disabled={loggingOut}
+        >
+          <span aria-hidden="true">↗</span>
+          {loggingOut ? '로그아웃 중...' : '로그아웃'}
+        </button>
       </aside>
       <main className="shell__main">
         <Outlet />
