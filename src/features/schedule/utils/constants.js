@@ -33,5 +33,3 @@ export const colorForSchedule = (scheduleId) =>
 
 /** 하루 작업 수 제한 (user_preferences.max_daily_tasks 기본값) */
 export const DEFAULT_MAX_DAILY_TASKS = 5
-/** 캘린더 셀에 보여줄 최대 개수 (나머지는 더보기) */
-export const CALENDAR_CELL_LIMIT = 3

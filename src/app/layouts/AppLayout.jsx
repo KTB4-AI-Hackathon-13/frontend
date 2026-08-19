@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 import { logout } from '../../features/auth/authApi.js'
+import { AUTH_EVENT_UNAUTHORIZED, authEvents } from '../../shared/api/client.js'
 
 /** 와이어프레임 공통 왼쪽 사이드바. 구현되지 않은 메뉴는 비활성 (다른 담당자 영역). */
 const NAV = [
@@ -17,6 +18,13 @@ const NAV = [
 function AppLayout() {
   const navigate = useNavigate()
   const [loggingOut, setLoggingOut] = useState(false)
+
+  // 세션 없음/만료(401 AUTHENTICATION_REQUIRED)면 로그인 화면으로. client.js 인터셉터가 authEvents 로 알려준다.
+  useEffect(() => {
+    const on = () => navigate('/login', { replace: true })
+    authEvents.addEventListener(AUTH_EVENT_UNAUTHORIZED, on)
+    return () => authEvents.removeEventListener(AUTH_EVENT_UNAUTHORIZED, on)
+  }, [navigate])
 
   const handleLogout = async () => {
     if (loggingOut) return
