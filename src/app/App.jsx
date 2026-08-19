@@ -10,9 +10,9 @@ import SignupPage from '../pages/SignupPage.jsx'
 function App() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route element={<AppLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
         {/* 07 메인 대시보드: 월간 캘린더 + 오늘 할 일 (5번 /calendar, /schedule-items/today) */}
         <Route path="/" element={<HomePage />} />
         {/* 내 계획 목록 / 06 계획 검토·수정 (5·6번) */}
