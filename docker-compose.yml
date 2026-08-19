@@ -1,0 +1,6 @@
+services:
+  frontend:
+    image: 707071531352.dkr.ecr.ap-northeast-2.amazonaws.com/hackathon/fe:${IMAGE_TAG}
+    ports:
+      - "80:80"
+    restart: unless-stopped
