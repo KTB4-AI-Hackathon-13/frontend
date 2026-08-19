@@ -1,5 +1,9 @@
 function HomePage() {
-  return <h1>Home</h1>
+  return (
+    <>
+      <div>랜딩 페이지</div>
+    </>
+  )
 }
 
 export default HomePage
