@@ -203,7 +203,7 @@
   font-weight: 700;
   transition: background 0.18s, transform 0.18s;
 }
-.auth-submit:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); }
+.auth-submit:hover:not(:disabled) { background: #4a505d; transform: translateY(-1px); }
 .auth-submit:disabled { opacity: 0.65; cursor: wait; }
 
 .auth-switch { margin: 24px 0 0; text-align: center; color: #687083; font-size: 12px; }

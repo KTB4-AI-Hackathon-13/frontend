@@ -27,7 +27,7 @@ export const ITEM_STATUS_LABEL = {
 }
 
 /** 계획별 색상 (와이어프레임: 계획별 색상, 완료 항목은 흐리게) */
-export const SCHEDULE_COLORS = ['#2f766d', '#2fb38a', '#f2a33c', '#e06aa6', '#4db2e0', '#9b6cf2']
+export const SCHEDULE_COLORS = ['#5b6cff', '#2fb38a', '#f2a33c', '#e06aa6', '#4db2e0', '#9b6cf2']
 export const colorForSchedule = (scheduleId) =>
   SCHEDULE_COLORS[Math.abs(Number(scheduleId)) % SCHEDULE_COLORS.length]
 
