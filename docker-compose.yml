@@ -1,0 +1,18 @@
+# 프론트 EC2에서 실행되는 compose. CD가 이 파일을 EC2 ~/app 으로 복사한 뒤
+#   export IMAGE_TAG=<github.sha>
+#   docker compose pull && docker compose up -d
+# 를 실행합니다. (Git이 원본, EC2엔 미리 둘 필요 없음)
+services:
+  frontend:
+    image: 707071531352.dkr.ecr.ap-northeast-2.amazonaws.com/hackathon/fe:${IMAGE_TAG}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data # Let's Encrypt 인증서 저장 → 재배포해도 유지
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
