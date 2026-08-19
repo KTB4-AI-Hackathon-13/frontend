@@ -16,7 +16,7 @@ function ErrorNotice({ error, onRetry, retryLabel = '다시 시도', children, c
         <ul className="notice__fields">
           {fieldErrors.map((f) => (
             <li key={f.field}>
-              <code>{f.field}</code> — {f.reason}
+              <code>{f.field}</code> — {f.message}
             </li>
           ))}
         </ul>

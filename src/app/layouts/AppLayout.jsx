@@ -19,7 +19,7 @@ function AppLayout() {
   const navigate = useNavigate()
   const [loggingOut, setLoggingOut] = useState(false)
 
-  // API 가 401 UNAUTHORIZED 를 돌려주면 로그인 화면으로 (핸드오프 §2). client.js 인터셉터가 authEvents 로 알려준다.
+  // 세션 없음/만료(401 AUTHENTICATION_REQUIRED)면 로그인 화면으로. client.js 인터셉터가 authEvents 로 알려준다.
   useEffect(() => {
     const on = () => navigate('/login', { replace: true })
     authEvents.addEventListener(AUTH_EVENT_UNAUTHORIZED, on)
