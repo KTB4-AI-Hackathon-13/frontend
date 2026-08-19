@@ -1,0 +1,20 @@
+talk2wall.com {
+	encode gzip
+
+	# /api → API 서버 EC2 (내부망 http, prefix 유지)
+	handle /api/* {
+		reverse_proxy http://172.31.12.113:8080
+	}
+
+	# /ai → AI 서버 EC2 (내부망 http, prefix 유지)
+	handle /ai/* {
+		reverse_proxy http://172.31.41.85:8000
+	}
+
+	# 그 외 → 빌드된 SPA 정적 파일
+	handle {
+		root * /usr/share/caddy
+		try_files {path} /index.html
+		file_server
+	}
+}
