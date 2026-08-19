@@ -46,3 +46,9 @@ export function shiftMonth(year, month, delta) {
   const d = new Date(year, month - 1 + delta, 1)
   return { year: d.getFullYear(), month: d.getMonth() + 1 }
 }
+
+/** 브라우저 로컬 기준 오늘 (YYYY-MM-DD). 서버 기준 오늘은 GET /schedule-items/today 의 date 를 우선 사용 */
+export const todayLocal = () => toDateStringFromDate(new Date())
+
+/** YYYY-MM-DD 가 [start, end] 안인지 */
+export const isWithin = (date, start, end) => date >= start && date <= end

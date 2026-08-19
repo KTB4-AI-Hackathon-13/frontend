@@ -128,7 +128,10 @@ button {
   gap: 9px;
   cursor: pointer;
   text-align: left;
-  transition: color 0.12s, background 0.12s, border-color 0.12s;
+  transition:
+    color 0.12s,
+    background 0.12s,
+    border-color 0.12s;
 }
 
 .sidebar__logout:hover:not(:disabled) {
@@ -449,7 +452,7 @@ button {
 /* ---------- home (07) ---------- */
 .home {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 28px;
   align-items: start;
   max-width: 1180px;
@@ -740,10 +743,15 @@ button {
   grid-template-columns: 4px 1fr 180px 16px;
   gap: 16px;
   align-items: center;
+  width: 100%;
   padding: 14px 16px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--surface);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 .plan-row:hover {
@@ -1028,4 +1036,287 @@ button {
     opacity: 1;
     transform: translate(-50%, 0);
   }
+}
+
+/* =========================================================
+   API 연동 추가분 (에러 표시 · 퍼즐 진행도 · 조각 획득 효과 · 목록 푸터 등)
+   ========================================================= */
+
+.btn--sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* 에러 블록 (ErrorNotice) */
+.notice {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+.notice--error {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border-strong));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+}
+.notice--compact {
+  padding: 8px 12px;
+  gap: 6px;
+}
+.notice__msg {
+  margin: 0;
+  font-weight: 500;
+}
+.notice__fields {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.notice__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.notice__req {
+  margin: 0;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.field__error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+/* 퍼즐 진행도 */
+.puzzle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.puzzle__line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puzzle__count {
+  color: var(--muted);
+}
+.puzzle__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
+}
+.puzzle__piece {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  transition: background 0.3s;
+}
+.puzzle__piece.is-filled {
+  background: var(--chip-color, var(--accent));
+  border-color: transparent;
+}
+
+/* 퍼즐 조각 획득 효과 (puzzlePieceAwarded=true) */
+.award {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 60;
+}
+.award__card {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 32px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 40px rgba(20, 25, 40, 0.25);
+  animation: award-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.award__icon {
+  font-size: 42px;
+  animation: award-spin 1.2s ease-in-out;
+}
+.award__title {
+  font-size: 17px;
+}
+.award__sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+@keyframes award-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes award-spin {
+  0% {
+    transform: rotate(-20deg) scale(0.6);
+  }
+  60% {
+    transform: rotate(10deg) scale(1.15);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 목록 푸터 (무한 스크롤 센티널) */
+.list-foot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 0 32px;
+  min-height: 56px;
+}
+
+/* 상태 변경 요청 중 */
+.plan-item.is-pending,
+.today__item.is-pending {
+  opacity: 0.6;
+}
+
+.plan-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.plan-item__meta {
+  font-size: 11px;
+}
+.plan-day__add {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+}
+.pill--muted {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+}
+
+/* 홈 오른쪽 패널 래퍼 (에러 블록 + 오늘 할 일) */
+.home__side {
+  position: sticky;
+  top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.home__side .today {
+  position: static;
+}
+/* 날짜 칸은 그 날 할 일 행 수만큼 세로로 자란다 (잘라내기·더보기 없음). 같은 주의 칸들은 가장 높은 칸에 맞춰짐 */
+.cal__grid {
+  grid-auto-rows: auto;
+}
+.cal__cell {
+  height: auto;
+}
+.cal__chips {
+  flex: 1;
+}
+.cal-wrap.is-loading {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.confirm p {
+  margin: 0 0 8px;
+}
+
+/* =========================================================
+   홈 중심 UI — 패널 행 클릭 → 할 일 모달, 목록 행 클릭 → 계획 모달
+   ========================================================= */
+
+/* 패널 행 본문(버튼) — 체크박스 밖을 누르면 할 일 모달 */
+.today__open {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border-radius: 4px;
+}
+.today__open:hover .today__item-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.today__open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.item-modal,
+.schedule-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.item-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.item-modal__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.item-modal__danger {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.inline-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.schedule-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.schedule-modal__puzzle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
 }

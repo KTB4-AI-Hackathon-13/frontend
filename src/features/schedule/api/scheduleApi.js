@@ -1,243 +1,105 @@
 /**
- * 스케줄(5번)·작업(6번) API 레이어.
+ * 스케줄(5번)·작업(6번) API 레이어 — 핸드오프 문서 §4·§5.
+ * 모든 호출은 shared/api/client.js 를 거치며, 성공 시 `{ data, meta }` 의 data 만 돌아온다.
+ * 실패 시 ApiError(code, message, fieldErrors, requestId) 가 throw 된다.
  *
- * 지금은 mockStore 를 읽고 쓰는 정적 구현이며, 반환 형태는 백엔드 DTO
- * (ScheduleSummaryResponse / ScheduleDetailResponse / CalendarResponse / TodayItemsResponse /
- *  ScheduleItemResponse) 와 동일하다. 백엔드 연동 시 각 함수 본문을
- * `client.get('/schedules', { params })` 식으로 교체하면 화면 코드는 그대로 쓴다.
+ * ※ 순서 변경 `PUT /schedules/{id}/items/order` 는 백엔드에서 제거 예정이라 구현하지 않는다.
+ *    같은 날짜 안 정렬은 서버가 준 순서(position → priority → id)를 그대로 쓴다.
  */
-import { MOCK_TODAY, items, newItemId, preferences, schedules } from './mockStore.js'
-import { ITEM_STATUS } from '../utils/constants.js'
+import client from '../../../shared/api/client.js'
 
-const LATENCY = 120
-const delay = (v) => new Promise((resolve) => setTimeout(() => resolve(v), LATENCY))
-const fail = (code, message, status = 422) =>
-  Promise.reject(Object.assign(new Error(message), { code, status, fieldErrors: [] }))
+/** @typedef {import('./types.js').ScheduleSummary} ScheduleSummary */
+/** @typedef {import('./types.js').ScheduleDetail} ScheduleDetail */
+/** @typedef {import('./types.js').ScheduleItem} ScheduleItem */
+/** @typedef {import('./types.js').CalendarResponse} CalendarResponse */
+/** @typedef {import('./types.js').TodayResponse} TodayResponse */
+/** @typedef {import('./types.js').ItemStatusChangeResponse} ItemStatusChangeResponse */
 
-const alive = (arr) => arr.filter((x) => !x.deletedAt)
-const isDone = (it) => it.status === ITEM_STATUS.COMPLETED
-const findSchedule = (id) => alive(schedules).find((s) => s.id === Number(id))
-const itemsOf = (scheduleId) => alive(items).filter((it) => it.scheduleId === Number(scheduleId))
-
-const summary = (s) => {
-  const its = itemsOf(s.id)
-  return {
-    id: s.id,
-    title: s.title,
-    status: s.status,
-    source: s.source,
-    startDate: s.startDate,
-    endDate: s.endDate,
-    currentVersion: s.currentVersion,
-    puzzleCount: its.length,
-    completedPuzzleCount: its.filter(isDone).length,
-    createdAt: s.createdAt,
-    updatedAt: s.updatedAt,
-  }
-}
-
-const dailyItem = (it) => {
-  const s = findSchedule(it.scheduleId)
-  return {
-    id: it.id,
-    scheduleId: it.scheduleId,
-    scheduleTitle: s?.title ?? '',
-    categoryId: it.categoryId,
-    title: it.title,
-    workload: it.workload,
-    priority: it.priority,
-    status: it.status,
-    completedAt: it.completedAt,
-  }
-}
-
-const groupDays = (list, mapper) => {
-  const map = new Map()
-  for (const it of [...list].sort(
-    (a, b) => a.scheduledDate.localeCompare(b.scheduledDate) || a.id - b.id,
-  )) {
-    if (!map.has(it.scheduledDate)) map.set(it.scheduledDate, [])
-    map.get(it.scheduledDate).push(it)
-  }
-  return [...map.entries()].map(([date, dayItems]) => ({
-    date,
-    totalCount: dayItems.length,
-    completedCount: dayItems.filter(isDone).length,
-    items: dayItems.map(mapper),
-  }))
-}
-
-/** 현재 날짜 (백엔드는 Asia/Seoul 기준 LocalDate.now) */
-export const getToday = () => MOCK_TODAY
+/** undefined 값은 빼고 보낸다 (PATCH 는 "보낸 필드만 변경", null 도 유지 취급) */
+const compact = (obj) =>
+  Object.fromEntries(Object.entries(obj ?? {}).filter(([, v]) => v !== undefined))
 
 // ---------- 5. 스케줄 API ----------
 
-/** GET /schedules?status&size&cursor */
-export async function fetchSchedules({ status } = {}) {
-  const list = alive(schedules)
-    .filter((s) => !status || s.status === status)
-    .sort((a, b) => b.id - a.id)
-    .map(summary)
-  return delay({ items: list, nextCursor: null, hasNext: false })
-}
-
-/** GET /schedules/{scheduleId} */
-export async function fetchScheduleDetail(scheduleId) {
-  const s = findSchedule(scheduleId)
-  if (!s) return fail('SCHEDULE_NOT_FOUND', '스케줄을 찾을 수 없습니다.', 404)
-  const its = itemsOf(s.id)
-  return delay({
-    ...summary(s),
-    description: s.description,
-    days: groupDays(its, (it) => ({ ...it })),
+/**
+ * 4.1 목록 `GET /schedules?status=&size=&cursor=` (최신 id 순, 커서 페이징)
+ * @param {{ status?: string, size?: number, cursor?: string | null }} [params]
+ * @returns {Promise<import('./types.js').CursorPage<ScheduleSummary>>}
+ */
+export function fetchSchedules({ status, size = 20, cursor } = {}) {
+  return client.get('/schedules', {
+    params: compact({ status: status || undefined, size, cursor: cursor || undefined }),
   })
 }
 
-/** PATCH /schedules/{scheduleId} — title?, description?, startDate?, endDate? */
-export async function updateSchedule(scheduleId, patch) {
-  const s = findSchedule(scheduleId)
-  if (!s) return fail('SCHEDULE_NOT_FOUND', '스케줄을 찾을 수 없습니다.', 404)
-  const next = {
-    ...s,
-    ...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)),
-  }
-  if (next.startDate > next.endDate)
-    return fail('INVALID_PERIOD', '시작일이 종료일보다 늦을 수 없습니다.', 400)
-  const outside = itemsOf(s.id).filter(
-    (it) => it.scheduledDate < next.startDate || it.scheduledDate > next.endDate,
-  )
-  if (outside.length > 0) {
-    return fail(
-      'ITEMS_OUTSIDE_SCHEDULE_PERIOD',
-      `변경된 기간 밖에 작업 ${outside.length}건이 있습니다.`,
-      409,
-    )
-  }
-  Object.assign(s, next, {
-    currentVersion: s.currentVersion + 1,
-    updatedAt: new Date().toISOString(),
-  })
-  return fetchScheduleDetail(s.id)
+/**
+ * 4.2 상세 `GET /schedules/{scheduleId}` — 요약 + days[] (작업 있는 날짜만, 오름차순)
+ * @returns {Promise<ScheduleDetail>}
+ */
+export function fetchScheduleDetail(scheduleId) {
+  return client.get(`/schedules/${scheduleId}`)
 }
 
-/** DELETE /schedules/{scheduleId} */
-export async function deleteSchedule(scheduleId) {
-  const s = findSchedule(scheduleId)
-  if (!s) return fail('SCHEDULE_NOT_FOUND', '스케줄을 찾을 수 없습니다.', 404)
-  s.deletedAt = new Date().toISOString()
-  itemsOf(s.id).forEach((it) => (it.deletedAt = s.deletedAt))
-  return delay(undefined)
+/**
+ * 4.3 수정 `PATCH /schedules/{scheduleId}` — title?, startDate?, endDate? (보낸 필드만 변경)
+ * 409 ITEMS_OUTSIDE_SCHEDULE_PERIOD / 422 INVALID_SCHEDULE_PERIOD
+ * @returns {Promise<ScheduleSummary>}
+ */
+export function updateSchedule(scheduleId, patch) {
+  return client.patch(`/schedules/${scheduleId}`, compact(patch))
 }
 
-/** GET /calendar?year&month */
-export async function fetchCalendar(year, month) {
-  const prefix = `${year}-${String(month).padStart(2, '0')}-`
-  const its = alive(items).filter((it) => it.scheduledDate.startsWith(prefix))
-  return delay({
-    year,
-    month,
-    totalCount: its.length,
-    completedCount: its.filter(isDone).length,
-    days: groupDays(its, dailyItem),
-  })
+/** 4.4 삭제 `DELETE /schedules/{scheduleId}` → 204 (작업까지 소프트 삭제) */
+export function deleteSchedule(scheduleId) {
+  return client.delete(`/schedules/${scheduleId}`)
 }
 
-/** GET /schedule-items/today */
-export async function fetchToday() {
-  const date = getToday()
-  const its = alive(items)
-    .filter((it) => it.scheduledDate === date)
-    .sort((a, b) => a.id - b.id)
-  return delay({
-    date,
-    totalCount: its.length,
-    completedCount: its.filter(isDone).length,
-    items: its.map(dailyItem),
-  })
+/**
+ * 4.5 월별 캘린더 `GET /calendar?year&month` — 작업 있는 날짜만, 여러 스케줄 섞여 옴
+ * @returns {Promise<CalendarResponse>}
+ */
+export function fetchCalendar(year, month) {
+  return client.get('/calendar', { params: { year, month } })
+}
+
+/**
+ * 4.6 오늘 할 일 `GET /schedule-items/today` — 서버 기준 오늘(Asia/Seoul)
+ * @returns {Promise<TodayResponse>}
+ */
+export function fetchToday() {
+  return client.get('/schedule-items/today')
 }
 
 // ---------- 6. 작업 API ----------
 
-/** POST /schedules/{scheduleId}/items */
-export async function createItem(scheduleId, body) {
-  const s = findSchedule(scheduleId)
-  if (!s) return fail('SCHEDULE_NOT_FOUND', '스케줄을 찾을 수 없습니다.', 404)
-  if (body.scheduledDate < s.startDate || body.scheduledDate > s.endDate) {
-    return fail(
-      'DATE_OUTSIDE_SCHEDULE_PERIOD',
-      `작업 날짜는 계획 기간(${s.startDate} ~ ${s.endDate}) 안이어야 합니다.`,
-    )
-  }
-  const sameDay = itemsOf(s.id).filter((it) => it.scheduledDate === body.scheduledDate).length
-  if (sameDay >= preferences.maxDailyTasks) {
-    return fail(
-      'MAX_DAILY_TASKS_EXCEEDED',
-      `하루 최대 작업 수(${preferences.maxDailyTasks}개)를 초과했습니다.`,
-    )
-  }
-  const now = new Date().toISOString()
-  const created = {
-    id: newItemId(),
-    scheduleId: s.id,
-    categoryId: body.categoryId ?? null,
-    parentItemId: null,
-    title: body.title,
-    description: body.description ?? null,
-    scheduledDate: body.scheduledDate,
-    workload: body.workload ?? 1,
-    priority: body.priority ?? 3,
-    status: ITEM_STATUS.TODO,
-    completedAt: null,
-    createdAt: now,
-    updatedAt: now,
-  }
-  items.push(created)
-  return delay({ ...created })
-}
-
-/** PATCH /schedule-items/{itemId} */
-export async function updateItem(itemId, patch) {
-  const it = alive(items).find((x) => x.id === Number(itemId))
-  if (!it) return fail('SCHEDULE_ITEM_NOT_FOUND', '작업을 찾을 수 없습니다.', 404)
-  const s = findSchedule(it.scheduleId)
-  const nextDate = patch.scheduledDate ?? it.scheduledDate
-  if (nextDate < s.startDate || nextDate > s.endDate) {
-    return fail(
-      'DATE_OUTSIDE_SCHEDULE_PERIOD',
-      `작업 날짜는 계획 기간(${s.startDate} ~ ${s.endDate}) 안이어야 합니다.`,
-    )
-  }
-  Object.assign(it, Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)), {
-    updatedAt: new Date().toISOString(),
-  })
-  return delay({ ...it })
+/**
+ * 5.1 추가 `POST /schedules/{scheduleId}/items` → 201
+ * body: title(필수), scheduledDate(필수), description?, categoryId?, workload?, priority?, position?
+ * 422 DATE_OUTSIDE_SCHEDULE_PERIOD / 422 MAX_DAILY_TASKS_EXCEEDED / 400 INVALID_REQUEST
+ * @returns {Promise<ScheduleItem>}
+ */
+export function createItem(scheduleId, body) {
+  return client.post(`/schedules/${scheduleId}/items`, compact(body))
 }
 
 /**
- * PATCH /schedule-items/{itemId}/status
- * 응답: { itemId, status, completedAt, puzzlePieceAwarded, puzzlePieceId }
- * 최초 COMPLETED 전환 시에만 조각 지급. 되돌려도 회수하지 않음.
+ * 5.2 수정 `PATCH /schedule-items/{itemId}` — 보낸 것만 변경. status 는 여기서 못 바꿈(changeItemStatus).
+ * @returns {Promise<ScheduleItem>}
  */
-export async function changeItemStatus(itemId, status) {
-  const it = alive(items).find((x) => x.id === Number(itemId))
-  if (!it) return fail('SCHEDULE_ITEM_NOT_FOUND', '작업을 찾을 수 없습니다.', 404)
-  const firstCompletion = status === ITEM_STATUS.COMPLETED && !it.completedAt
-  it.status = status
-  if (firstCompletion) it.completedAt = new Date().toISOString()
-  it.updatedAt = new Date().toISOString()
-  return delay({
-    itemId: it.id,
-    status: it.status,
-    completedAt: it.completedAt,
-    puzzlePieceAwarded: firstCompletion,
-    puzzlePieceId: firstCompletion ? 5000 + it.id : null,
-  })
+export function updateItem(itemId, patch) {
+  return client.patch(`/schedule-items/${itemId}`, compact(patch))
 }
 
-/** DELETE /schedule-items/{itemId} */
-export async function deleteItem(itemId) {
-  const it = alive(items).find((x) => x.id === Number(itemId))
-  if (!it) return fail('SCHEDULE_ITEM_NOT_FOUND', '작업을 찾을 수 없습니다.', 404)
-  it.deletedAt = new Date().toISOString()
-  return delay(undefined)
+/**
+ * 5.3 상태 변경 `PATCH /schedule-items/{itemId}/status` — 멱등
+ * @param {import('./types.js').ItemStatus} status
+ * @returns {Promise<ItemStatusChangeResponse>} puzzlePieceAwarded 는 7번 구현 전까지 항상 false
+ */
+export function changeItemStatus(itemId, status) {
+  return client.patch(`/schedule-items/${itemId}/status`, { status })
+}
+
+/** 5.5 삭제 `DELETE /schedule-items/{itemId}` → 204 */
+export function deleteItem(itemId) {
+  return client.delete(`/schedule-items/${itemId}`)
 }

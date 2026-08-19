@@ -1,53 +1,80 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import {
-  changeItemStatus,
   createItem,
   fetchCalendar,
   fetchSchedules,
   fetchToday,
-  getToday,
 } from '../features/schedule/api/scheduleApi.js'
+import ItemModal from '../features/schedule/components/ItemModal.jsx'
 import Modal from '../features/schedule/components/Modal.jsx'
 import MonthCalendar from '../features/schedule/components/MonthCalendar.jsx'
+import PieceAwardEffect from '../features/schedule/components/PieceAwardEffect.jsx'
 import ScheduleItemForm from '../features/schedule/components/ScheduleItemForm.jsx'
 import Toast from '../features/schedule/components/Toast.jsx'
 import TodayPanel from '../features/schedule/components/TodayPanel.jsx'
 import { useAsync } from '../features/schedule/hooks/useAsync.js'
+import { useItemStatus } from '../features/schedule/hooks/useItemStatus.js'
 import { useToast } from '../features/schedule/hooks/useToast.js'
 import { SCHEDULE_STATUS } from '../features/schedule/utils/constants.js'
-import { shiftMonth } from '../features/schedule/utils/date.js'
+import { isWithin, shiftMonth, todayLocal } from '../features/schedule/utils/date.js'
+import ErrorNotice from '../shared/components/ErrorNotice.jsx'
+
+/** 할 일을 추가할 수 있는 계획 상태 (검토 중인 AI 초안에도 추가 가능) */
+const ADDABLE_STATUSES = new Set([SCHEDULE_STATUS.ACTIVE, SCHEDULE_STATUS.DRAFT])
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 /**
- * 와이어프레임 07 · 메인 대시보드
- * - 왼쪽: 월간 캘린더 (GET /calendar?year&month)
- * - 오른쪽: 오늘 할 일 (GET /schedule-items/today) — 다른 날짜를 클릭하면 그 날의 할 일로 전환
- * - + 할 일 추가 (POST /schedules/{scheduleId}/items)
+ * 메인 대시보드 (와이어프레임 07) — 할 일과 관련된 모든 조작은 이 화면 + 모달에서 끝난다.
+ * - 왼쪽 월간 캘린더 : GET /calendar?year&month (월 이동 때마다). 칩 클릭 → 그 날짜 선택 + 할 일 모달
+ * - 오른쪽 할 일 패널 : GET /schedule-items/today (서버 기준 오늘, Asia/Seoul). 다른 날짜 클릭 시 캘린더 응답의 그 날짜
+ *                      패널은 "나열 + 완료 체크"만, 행 클릭 → 할 일 모달(수정·상태·삭제)
+ * - 체크박스         : PATCH /schedule-items/{id}/status (낙관적 업데이트 → 성공 시 캘린더+오늘 재조회)
+ * - + 할 일 추가     : POST /schedules/{scheduleId}/items (계획 선택 목록은 GET /schedules?size=100 중 ACTIVE/DRAFT)
+ * - ?date=YYYY-MM-DD 로 진입하면 그 날짜/달을 연다 (계획 모달의 "캘린더에서 보기")
  */
 function HomePage() {
-  const navigate = useNavigate()
-  const today = getToday()
-  const [{ year, month }, setYm] = useState({
-    year: Number(today.slice(0, 4)),
-    month: Number(today.slice(5, 7)),
+  const [searchParams] = useSearchParams()
+  const localToday = todayLocal()
+  const initialDate = DATE_RE.test(searchParams.get('date') ?? '') ? searchParams.get('date') : null
+  const [{ year, month }, setYm] = useState(() => {
+    const base = initialDate ?? localToday
+    return { year: Number(base.slice(0, 4)), month: Number(base.slice(5, 7)) }
   })
-  const [selectedDate, setSelectedDate] = useState(today)
+  // null = "오늘" (서버 기준 오늘이 도착하면 자동으로 그 날짜를 가리킴)
+  const [selectedState, setSelectedDate] = useState(initialDate)
   const [modal, setModal] = useState(null) // { defaultDate }
+  const [itemModal, setItemModal] = useState(null) // DailyItem
   const [serverError, setServerError] = useState(null)
+  const [busy, setBusy] = useState(false)
   const { toast, show } = useToast()
 
   const calendar = useAsync(() => fetchCalendar(year, month), [year, month])
   const todayData = useAsync(() => fetchToday(), [])
-  const schedules = useAsync(() => fetchSchedules({ status: SCHEDULE_STATUS.ACTIVE }), [])
+  const schedules = useAsync(() => fetchSchedules({ size: 100 }), [])
 
-  useEffect(() => {
-    if (calendar.error) show(calendar.error.message, 'error')
-  }, [calendar.error, show])
+  // 서버 기준 오늘(Asia/Seoul)을 우선, 도착 전에는 브라우저 날짜
+  const today = todayData.data?.date ?? localToday
+  const selectedDate = selectedState ?? today
+
+  const { reload: reloadCalendar } = calendar
+  const { reload: reloadToday } = todayData
+  const reloadAll = useCallback(
+    () => Promise.all([reloadCalendar(), reloadToday()]),
+    [reloadCalendar, reloadToday],
+  )
+  const onStatusError = useCallback((msg) => show(msg, 'error'), [show])
+  const { statusOf, change, pending, award, clearAward } = useItemStatus({
+    onSuccess: reloadAll,
+    onError: onStatusError,
+  })
 
   // 선택한 날짜가 오늘이면 /schedule-items/today 응답을, 아니면 캘린더 응답에서 해당 날짜를 꺼내 쓴다.
+  const isTodaySelected = selectedDate === today
   const panelData = useMemo(() => {
-    if (selectedDate === today) return todayData.data
+    if (isTodaySelected && todayData.data) return todayData.data
     const day = calendar.data?.days.find((d) => d.date === selectedDate)
     return {
       date: selectedDate,
@@ -55,32 +82,40 @@ function HomePage() {
       completedCount: day?.completedCount ?? 0,
       items: day?.items ?? [],
     }
-  }, [selectedDate, today, todayData.data, calendar.data])
+  }, [isTodaySelected, selectedDate, todayData.data, calendar.data])
 
-  const reloadAll = useCallback(() => {
-    calendar.reload()
-    todayData.reload()
-  }, [calendar, todayData])
+  // 할 일 모달에는 재조회된 최신 항목을 넘긴다 (열 때 캡처한 객체는 상태가 바뀌어도 갱신되지 않음)
+  const liveItemModal = useMemo(() => {
+    if (!itemModal) return null
+    return panelData.items.find((it) => it.id === itemModal.id) ?? itemModal
+  }, [itemModal, panelData.items])
 
-  const handleToggle = async (item, status) => {
+  const addableSchedules = useMemo(
+    () => (schedules.data?.items ?? []).filter((s) => ADDABLE_STATUSES.has(s.status)),
+    [schedules.data],
+  )
+  // 선택한 날짜를 기간에 포함하는 계획을 앞에 둔다 (폼 기본 선택)
+  const schedulesForForm = useMemo(() => {
+    const d = modal?.defaultDate
+    if (!d) return addableSchedules
+    return [...addableSchedules].sort(
+      (a, b) =>
+        Number(isWithin(d, b.startDate, b.endDate)) - Number(isWithin(d, a.startDate, a.endDate)),
+    )
+  }, [addableSchedules, modal?.defaultDate])
+
+  const handleCreate = async ({ scheduleId, body }) => {
+    setBusy(true)
+    setServerError(null)
     try {
-      const res = await changeItemStatus(item.id, status)
-      if (res.puzzlePieceAwarded) show('🧩 퍼즐 조각 1개를 획득했어요!', 'success')
-      reloadAll()
-    } catch (e) {
-      show(e.message, 'error')
-    }
-  }
-
-  const handleCreate = async (body) => {
-    try {
-      await createItem(body.scheduleId, body)
-      setServerError(null)
+      await createItem(scheduleId, body)
       setModal(null)
-      show('할 일을 추가했어요.')
+      show('할 일을 추가했어요.', 'success')
       reloadAll()
     } catch (e) {
-      setServerError(e.message)
+      setServerError(e)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -91,8 +126,11 @@ function HomePage() {
 
   const goToday = () => {
     setYm({ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) })
-    setSelectedDate(today)
+    setSelectedDate(null)
   }
+
+  const cal = calendar.data
+  const monthPct = cal?.totalCount ? Math.round((cal.completedCount / cal.totalCount) * 100) : 0
 
   return (
     <section className="home">
@@ -102,7 +140,11 @@ function HomePage() {
             <h1 className="page-title">
               {year}년 {month}월
             </h1>
-            <p className="page-sub">일 단위로 계획을 확인하고 완료하세요.</p>
+            <p className="page-sub">
+              {cal && cal.totalCount > 0
+                ? `이번 달 할 일 ${cal.totalCount}개 중 ${cal.completedCount}개 완료 (${monthPct}%)`
+                : '일 단위로 계획을 확인하고 완료하세요.'}
+            </p>
           </div>
           <div className="home__nav">
             <button type="button" className="btn" onClick={goToday}>
@@ -130,38 +172,73 @@ function HomePage() {
           </button>
         </header>
 
-        <MonthCalendar
-          year={year}
-          month={month}
-          days={calendar.data?.days}
-          today={today}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          onOpenItem={(it) => navigate(`/schedules/${it.scheduleId}`)}
+        {calendar.error && <ErrorNotice error={calendar.error} onRetry={calendar.reload} compact />}
+
+        <div className={`cal-wrap ${calendar.loading ? 'is-loading' : ''}`}>
+          <MonthCalendar
+            year={year}
+            month={month}
+            days={cal?.days}
+            today={today}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onOpenItem={(it, date) => {
+              setSelectedDate(date)
+              setItemModal(it)
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="home__side">
+        {todayData.error && isTodaySelected && (
+          <ErrorNotice error={todayData.error} onRetry={todayData.reload} compact />
+        )}
+        <TodayPanel
+          data={panelData}
+          loading={isTodaySelected ? todayData.loading : calendar.loading}
+          isToday={isTodaySelected}
+          title={isTodaySelected ? '오늘 할 일' : '할 일'}
+          statusOf={statusOf}
+          pending={pending}
+          onToggle={change}
+          onOpen={setItemModal}
+          onAdd={() => openAdd(selectedDate)}
         />
       </div>
 
-      <TodayPanel
-        data={panelData}
-        loading={selectedDate === today ? todayData.loading : calendar.loading}
-        isToday={selectedDate === today}
-        title={selectedDate === today ? '오늘 할 일' : '할 일'}
-        onToggle={handleToggle}
-        onAdd={() => openAdd(selectedDate)}
-      />
-
       {modal && (
         <Modal title="할 일 추가" onClose={() => setModal(null)}>
-          <ScheduleItemForm
-            schedules={schedules.data?.items ?? []}
-            defaultDate={modal.defaultDate}
-            onSubmit={handleCreate}
-            onCancel={() => setModal(null)}
-            serverError={serverError}
-          />
+          {schedules.error ? (
+            <ErrorNotice error={schedules.error} onRetry={schedules.reload} compact />
+          ) : schedules.loading && !schedules.data ? (
+            <p className="muted">계획 목록을 불러오는 중…</p>
+          ) : (
+            <ScheduleItemForm
+              schedules={schedulesForForm}
+              defaultDate={modal.defaultDate}
+              onSubmit={handleCreate}
+              onCancel={() => setModal(null)}
+              serverError={serverError}
+              submitting={busy}
+            />
+          )}
         </Modal>
       )}
 
+      {liveItemModal && (
+        <ItemModal
+          key={liveItemModal.id}
+          item={liveItemModal}
+          status={statusOf(liveItemModal)}
+          onClose={() => setItemModal(null)}
+          onChanged={reloadAll}
+          onStatusChange={change}
+        />
+      )}
+
+      {/* 퍼즐 조각 획득 효과 — puzzlePieceAwarded=true 일 때만 (7번 구현 전까지 서버는 false) */}
+      <PieceAwardEffect award={award} onDone={clearAward} />
       <Toast toast={toast} />
     </section>
   )
