@@ -84,7 +84,7 @@ function ScheduleItemForm({
   }
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
+    <form className="form" onSubmit={handleSubmit} noValidate>
       {!fixedScheduleId && !isEdit && (
         <label className="field">
           <span className="field__label">계획</span>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import PuzzleBoard from './PuzzleBoard.jsx'
-import { fetchPuzzle } from '../api/puzzleApi.js'
+import { getPuzzleDetail } from '../api/puzzleCache.js'
 import { usePuzzleImage } from '../hooks/usePuzzleImage.js'
 import Modal from '../../schedule/components/Modal.jsx'
 import { useAsync } from '../../schedule/hooks/useAsync.js'
@@ -15,11 +15,20 @@ import ErrorNotice from '../../../shared/components/ErrorNotice.jsx'
  * - 조각에 마우스를 올리면 어떤 할 일로 딴 조각인지 + 몇 번째로 획득했는지(position) 보여준다
  * - 공개 범위(visibility)는 서버 값을 배지로 보여주기만 한다. 변경 PATCH·좋아요·신고는 백엔드에 없어 UI 도 두지 않는다
  */
-function PuzzleDetailModal({ puzzleId, onClose }) {
-  const { data: puzzle, loading, error, reload } = useAsync(() => fetchPuzzle(puzzleId), [puzzleId])
+function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) {
+  // 카드가 이미 받아둔 상세가 있으면 캐시에서 즉시 나온다 (추가 요청 없음)
+  const {
+    data: puzzle,
+    loading,
+    error,
+    reload,
+  } = useAsync(
+    () => getPuzzleDetail(puzzleId, pieceCount, earnedPieceCount),
+    [puzzleId, pieceCount, earnedPieceCount],
+  )
   const [hovered, setHovered] = useState(null)
 
-  const { imageUrl, hasImage, onImageError } = usePuzzleImage(puzzle)
+  const { imageUrl, hasImage, imageLoading, onImageError } = usePuzzleImage(puzzle)
   const complete = puzzle?.status === 'COMPLETED'
   const pct = puzzle?.pieceCount
     ? Math.round((puzzle.earnedPieceCount / puzzle.pieceCount) * 100)
@@ -35,6 +44,7 @@ function PuzzleDetailModal({ puzzleId, onClose }) {
           <div className="pdetail__board">
             <PuzzleBoard
               imageUrl={imageUrl}
+              imageLoading={imageLoading}
               pieces={puzzle.pieces}
               size={320}
               seed={puzzle.id}
@@ -87,7 +97,7 @@ function PuzzleDetailModal({ puzzleId, onClose }) {
 
             <p className="muted small">
               할 일을 하나 완료할 때마다 조각이 한 개씩 열려요. 모두 열면 원본 그림이 공개됩니다.
-              {!hasImage && ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.'}
+              {!hasImage && !imageLoading && ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.'}
             </p>
           </div>
         </div>

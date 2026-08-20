@@ -24,7 +24,7 @@ const FILTERS = [
  */
 function PuzzlesPage() {
   const [status, setStatus] = useState('')
-  const [openId, setOpenId] = useState(null)
+  const [open, setOpen] = useState(null) // 열려 있는 퍼즐 요약
   const fetchPage = useCallback(
     (cursor) => fetchMyPuzzles({ status: status || undefined, size: PAGE_SIZE, cursor }),
     [status],
@@ -78,7 +78,7 @@ function PuzzlesPage() {
 
       <div className="pgrid">
         {items.map((p) => (
-          <PuzzleCard key={p.id} puzzle={p} onOpen={() => setOpenId(p.id)} />
+          <PuzzleCard key={p.id} puzzle={p} onOpen={() => setOpen(p)} />
         ))}
       </div>
 
@@ -94,8 +94,13 @@ function PuzzlesPage() {
         </div>
       )}
 
-      {openId != null && (
-        <PuzzleDetailModal puzzleId={openId} onClose={() => setOpenId(null)} onChanged={reload} />
+      {open && (
+        <PuzzleDetailModal
+          puzzleId={open.id}
+          pieceCount={open.pieceCount}
+          earnedPieceCount={open.earnedPieceCount}
+          onClose={() => setOpen(null)}
+        />
       )}
     </section>
   )
