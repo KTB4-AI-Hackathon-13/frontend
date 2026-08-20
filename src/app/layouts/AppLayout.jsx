@@ -41,8 +41,8 @@ function AppLayout() {
           <span /><span /><span />
         </button>
         <NavLink to="/" className="sidebar__brand" aria-label="AI Planner 홈">
-          <span className="sidebar__brand-mark" aria-hidden="true"><span /></span>
-          <span className="sidebar__brand-copy"><strong>AI Planner</strong><small>Plan your better day</small></span>
+          {/* <span className="sidebar__brand-mark" aria-hidden="true"><span /></span> */}
+          <span className="sidebar__brand-copy"><strong>AI Planner</strong></span>
         </NavLink>
       </header>
       <div className={`shell__body ${isSidebarOpen ? 'has-sidebar' : ''}`}>
