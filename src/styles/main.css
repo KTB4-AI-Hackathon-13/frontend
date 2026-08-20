@@ -3,64 +3,61 @@
   line-height: 1.5;
   color-scheme: light dark;
 
-  --bg: #f6f7fa;
-  --bg: #f6f7fa;
+  /* 브랜드 팔레트 (docs/서비스_컬러.png) */
+  --brand: #4f5bff; /* Main */
+  --brand-sky: #5e82f7; /* Main.Variant1 */
+  --brand-deep: #3f49de; /* Main.Variant2 */
+  --brand-light: #97b0ff; /* Main.Variant3 */
+  --brand-tint: #f6f7ff; /* Main.Variant4 */
+  --brand-gradient: linear-gradient(100deg, #4f5bff 0%, #5e82f7 48%, #f6f7ff 100%);
+  --brand-glow: rgba(79, 91, 255, 0.22);
+
+  --bg: #f6f7ff;
   --surface: #ffffff;
-  --surface-2: #f0f2f6;
-  --border: #dfe2e9;
-  --border-strong: #c7ccd6;
-  --text: #20242f;
-  --surface-2: #f0f2f6;
-  --border: #dfe2e9;
-  --border-strong: #c7ccd6;
-  --text: #20242f;
-  --muted: #6f7685;
-  --primary: #343b4c;
-  --primary: #343b4c;
+  --surface-2: #eff1fd;
+  --border: #e3e6f8;
+  --border-strong: #c6cbee;
+  --text: #1b1f38;
+  --muted: #6c7396;
+  --primary: #4f5bff;
   --primary-text: #ffffff;
-  --accent: #5668a9;
-  --accent-soft: #e9edf9;
-  --accent: #5668a9;
-  --accent-soft: #e9edf9;
-  --danger: #d64545;
-  --success: #2f9e5f;
+  --primary-hover: #3f49de;
+  --accent: #3f49de;
+  --accent-soft: #e9ecff;
+  --danger: #e04360;
+  --success: #16a97e;
   --radius: 10px;
   --radius-lg: 16px;
-  --shadow: 0 1px 2px rgba(31, 36, 48, 0.04), 0 8px 24px rgba(31, 36, 48, 0.04);
+  --shadow: 0 1px 2px rgba(46, 54, 128, 0.05), 0 8px 24px rgba(46, 54, 128, 0.07);
   --sidebar-w: 232px;
   --header-h: 64px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111319;
-    --surface: #191c24;
-    --surface-2: #222630;
-    --border: #303541;
-    --border-strong: #454c5c;
-    --text: #eceef4;
-    --muted: #9ba2b2;
-    --primary: #e2e6f0;
-    --primary-text: #1b1e27;
-    --accent: #93a5e8;
-    --accent-soft: #252d4a;
-    --danger: #f07171;
-    --success: #67c98e;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 12px 28px rgba(0, 0, 0, 0.14);
-    --bg: #111319;
-    --surface: #191c24;
-    --surface-2: #222630;
-    --border: #303541;
-    --border-strong: #454c5c;
-    --text: #eceef4;
-    --muted: #9ba2b2;
-    --primary: #e2e6f0;
-    --primary-text: #1b1e27;
-    --accent: #93a5e8;
-    --accent-soft: #252d4a;
-    --danger: #f07171;
-    --success: #67c98e;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 12px 28px rgba(0, 0, 0, 0.14);
+    --brand: #6e79ff;
+    --brand-sky: #7d99ff;
+    --brand-deep: #4f5bff;
+    --brand-light: #97b0ff;
+    --brand-tint: #1c2143;
+    --brand-gradient: linear-gradient(100deg, #3f49de 0%, #4f5bff 48%, #97b0ff 100%);
+    --brand-glow: rgba(110, 121, 255, 0.28);
+
+    --bg: #0e1022;
+    --surface: #171a30;
+    --surface-2: #212546;
+    --border: #2d3258;
+    --border-strong: #434a7c;
+    --text: #e9ebfb;
+    --muted: #969dc6;
+    --primary: #5a66ff;
+    --primary-text: #ffffff;
+    --primary-hover: #7d88ff;
+    --accent: #97b0ff;
+    --accent-soft: #242b56;
+    --danger: #ff6b83;
+    --success: #3ed6a5;
+    --shadow: 0 1px 2px rgba(4, 6, 22, 0.32), 0 12px 28px rgba(4, 6, 22, 0.4);
   }
 }
 
@@ -315,7 +312,7 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background: var(--primary);
+  background: linear-gradient(140deg, var(--brand) 0%, var(--brand-deep) 100%);
   display: grid;
   place-items: center;
   transform: rotate(-4deg);
@@ -340,7 +337,7 @@ button {
 .sidebar__brand-mark::after {
   height: 22px;
   transform: translate(7px, -3px);
-  background: #89cbb8;
+  background: var(--brand-light);
 }
 
 .sidebar__brand-copy {
@@ -361,7 +358,7 @@ button {
 
 .sidebar__nav-label {
   padding: 0 11px 8px;
-  color: #949baa;
+  color: #8b91b8;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -369,20 +366,20 @@ button {
 
 @media (prefers-color-scheme: dark) {
   .sidebar__nav-label {
-    color: #71827a;
+    color: #7d84ae;
   }
   .sidebar__link.is-disabled {
-    color: #65746d;
+    color: #5f6690;
   }
   .sidebar__brand-mark {
-    background: #dce9e3;
+    background: var(--primary);
   }
   .sidebar__brand-mark::before,
   .sidebar__brand-mark span {
-    background: #242938;
+    background: #ffffff;
   }
   .sidebar__brand-mark::after {
-    background: var(--accent);
+    background: var(--brand-light);
   }
 }
 
@@ -426,7 +423,7 @@ button {
 }
 
 .sidebar__link.is-disabled {
-  color: #a7acb7;
+  color: #a3a8cc;
   cursor: not-allowed;
 }
 
@@ -598,7 +595,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--surface);
-  box-shadow: 0 16px 45px rgba(31, 36, 48, 0.08);
+  box-shadow: 0 16px 45px rgba(46, 54, 128, 0.12);
 }
 
 .switch-user__profile {
@@ -937,7 +934,7 @@ button {
     inset: var(--header-h) 0 0;
     display: block;
     padding: 0;
-    background: rgb(24 28 38 / 28%);
+    background: rgb(20 24 62 / 32%);
     border: 0;
   }
   .shell__main {
@@ -980,6 +977,12 @@ button {
   align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .empty {
@@ -1043,6 +1046,16 @@ button {
   display: flex;
   gap: 3px;
 }
+.ranking__scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ranking__scope .select {
+  min-width: 140px;
+}
 .ranking__segmented button,
 .ranking__period button {
   min-height: 36px;
@@ -1071,12 +1084,14 @@ button {
 .ranking__mine {
   padding: 21px 24px;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--brand);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: linear-gradient(100deg, var(--brand-tint) 0%, var(--surface) 60%);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: inherit;
+  text-decoration: none;
   box-shadow: var(--shadow);
 }
 .ranking__mine > div {
@@ -1193,13 +1208,13 @@ button {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 .ranking__medal--1 {
-  background: #b58b32;
+  background: linear-gradient(140deg, #f0c04b, #c8912b);
 }
 .ranking__medal--2 {
-  background: #84909f;
+  background: linear-gradient(140deg, #c2c9e4, #8d97bb);
 }
 .ranking__medal--3 {
-  background: #9a6849;
+  background: linear-gradient(140deg, #d59a6f, #a56a45);
 }
 .ranking__person {
   min-width: 0;
@@ -1263,6 +1278,10 @@ button {
     align-items: stretch;
     flex-direction: column;
   }
+  .ranking__scope {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .ranking__segmented button,
   .ranking__period button {
     flex: 1;
@@ -1312,11 +1331,13 @@ button {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--primary-text);
+  box-shadow: 0 1px 2px var(--brand-glow);
 }
 
 .btn--primary:hover {
-  filter: brightness(1.1);
-  background: var(--primary);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 4px 12px var(--brand-glow);
 }
 
 .btn--icon {
@@ -1426,6 +1447,18 @@ button {
 .field__hint {
   font-size: 11px;
   color: var(--muted);
+}
+
+.field__readonly {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .field-row {
@@ -2040,7 +2073,7 @@ button {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 18, 28, 0.45);
+  background: rgba(16, 19, 52, 0.45);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -2053,7 +2086,7 @@ button {
   border-radius: var(--radius-lg);
   padding: 22px 24px;
   border: 1px solid var(--border);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 50px rgba(16, 19, 52, 0.28);
 }
 
 .modal__head {
@@ -2079,7 +2112,7 @@ button {
   background: var(--text);
   color: var(--bg);
   font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(16, 19, 52, 0.24);
   z-index: 60;
   animation: toast-in 0.2s ease-out;
 }
@@ -2211,7 +2244,7 @@ button {
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--border-strong);
-  box-shadow: 0 12px 40px rgba(20, 25, 40, 0.25);
+  box-shadow: 0 12px 40px rgba(46, 54, 128, 0.26);
   animation: award-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 .award__icon {
@@ -2388,6 +2421,107 @@ button {
   background: var(--surface-2);
 }
 
+.schedule-modal__edit-method {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-modal__edit-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.schedule-modal__edit-heading > strong {
+  font-size: 13px;
+}
+
+.schedule-modal__edit-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-modal__edit-option {
+  min-width: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.schedule-modal__edit-option.is-active {
+  border-color: var(--chip-color, var(--primary));
+  background: color-mix(in srgb, var(--chip-color, var(--primary)) 7%, var(--surface));
+}
+
+a.schedule-modal__edit-option:hover {
+  border-color: var(--primary);
+  background: var(--surface-2);
+}
+
+.schedule-modal__edit-option > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.schedule-modal__edit-option strong {
+  font-size: 12px;
+}
+
+.schedule-modal__edit-option small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.schedule-modal__edit-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.schedule-modal__edit-option.is-active .schedule-modal__edit-icon {
+  background: var(--chip-color, var(--primary));
+  color: var(--primary-text);
+}
+
+.schedule-modal__edit-arrow {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .schedule-modal__edit-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .schedule-modal__edit-options {
+    grid-template-columns: 1fr;
+  }
+
+}
+
 /* =========================================================
    캘린더 탐색 고도화 — 월/연도 피커 · 연 이동 · 날짜로 이동 · 단축키 안내
    ========================================================= */
@@ -2442,7 +2576,7 @@ button {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: 0 12px 32px rgba(20, 25, 40, 0.18);
+  box-shadow: 0 12px 32px rgba(46, 54, 128, 0.2);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2516,7 +2650,7 @@ button {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: 0 12px 32px rgba(20, 25, 40, 0.18);
+  box-shadow: 0 12px 32px rgba(46, 54, 128, 0.2);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2651,6 +2785,13 @@ button {
   border-color: var(--accent);
   transform: translateY(-2px);
 }
+.pcard--readonly {
+  cursor: default;
+}
+.pcard--readonly:hover {
+  border-color: var(--border-strong);
+  transform: none;
+}
 .pcard__thumb {
   display: grid;
   place-items: center;
@@ -2719,4 +2860,62 @@ button {
   .pdetail {
     grid-template-columns: 1fr;
   }
+}
+
+/* 달력 날짜 셀의 할 일을 계획 단위 그룹 칩으로 표시 */
+.cal__schedule-chip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-left-width: 4px;
+  background: color-mix(in srgb, var(--chip-color) 10%, var(--surface));
+}
+
+.cal__schedule-chip.is-continued-before {
+  width: calc(100% + 7px);
+  margin-left: -7px;
+  padding-left: 8px;
+  border-left-width: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.cal__schedule-chip.is-continued-after {
+  width: calc(100% + 7px);
+  margin-right: -7px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.cal__schedule-chip.is-continued-before.is-continued-after {
+  width: calc(100% + 14px);
+  border-radius: 0;
+}
+
+.cal__schedule-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal__schedule-slot {
+  min-height: 24px;
+}
+
+.cal__schedule-count {
+  min-width: 17px;
+  height: 17px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  margin-left: auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip-color) 18%, var(--surface));
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
 }

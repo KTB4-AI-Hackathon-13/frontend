@@ -1,5 +1,12 @@
-import { ITEM_STATUS, ITEM_STATUS_LABEL, colorForSchedule } from '../utils/constants.js'
+import {
+  ITEM_STATUS,
+  ITEM_STATUS_LABEL,
+  STANDALONE_ITEM_LABEL,
+  categoryLabelFor,
+  colorForSchedule,
+} from '../utils/constants.js'
 import { formatDateLong } from '../utils/date.js'
+import { orderScheduleItems } from '../utils/items.js'
 
 /**
  * 오늘 할 일 패널 (와이어프레임 07 오른쪽) — 선택한 날짜의 모든 할 일을 나열, 체크만 한다.
@@ -19,7 +26,7 @@ function TodayPanel({
   statusOf = (it) => it.status,
   pending = new Set(),
 }) {
-  const items = data?.items ?? []
+  const items = orderScheduleItems(data?.items)
   const completed = data?.completedCount ?? 0
   const total = data?.totalCount ?? 0
 
@@ -49,6 +56,7 @@ function TodayPanel({
           const cancelled = st === ITEM_STATUS.CANCELLED
           const inactive = st === ITEM_STATUS.SKIPPED || cancelled
           const isPending = pending.has(it.id)
+          const category = categoryLabelFor(it.categoryId)
           return (
             <li
               key={it.id}
@@ -76,7 +84,16 @@ function TodayPanel({
                     <span className="pill pill--muted">{ITEM_STATUS_LABEL[st]}</span>
                   )}
                 </span>
-                <span className="today__schedule">{it.scheduleTitle}</span>
+                <span className="today__schedule">
+                  {[
+                    it.scheduleTitle ?? STANDALONE_ITEM_LABEL,
+                    category,
+                    it.estimatedMinutes ? `예상 ${it.estimatedMinutes}분` : null,
+                    it.workload != null ? `작업량 ${it.workload}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
               </button>
             </li>
           )

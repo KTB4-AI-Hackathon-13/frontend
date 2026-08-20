@@ -4,6 +4,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { fetchMyPuzzles, fetchPublicPuzzles } from '../features/puzzle/api/puzzleApi.js'
 import PuzzleCard from '../features/puzzle/components/PuzzleCard.jsx'
 import PuzzleDetailModal from '../features/puzzle/components/PuzzleDetailModal.jsx'
+import { schedulesPathForPuzzleStatus } from '../features/puzzle/utils/scheduleLink.js'
 import { useCursorList } from '../features/schedule/hooks/useCursorList.js'
 import { useInfiniteScroll } from '../features/schedule/hooks/useInfiniteScroll.js'
 import ErrorNotice from '../shared/components/ErrorNotice.jsx'
@@ -19,7 +20,8 @@ const FILTERS = [
 /**
  * 내 퍼즐 (와이어프레임 08) — GET /puzzles/mine?status&size&cursor
  * - 탭으로 진행/완성 필터, 커서 무한 스크롤(스케줄 목록과 같은 훅)
- * - 카드 클릭 → 퍼즐 상세 모달 (GET /puzzles/{id})
+ * - 내 퍼즐 카드 클릭 → 퍼즐 상세 모달 (GET /puzzles/{id})
+ * - 타인 공개 퍼즐은 목록만 보여주고 상세 진입은 허용하지 않는다
  * - 할 일 1건 완료 = 조각 1개. 퍼즐은 그 계획에서 첫 조각이 지급될 때 서버가 만든다
  */
 function PuzzlesPage() {
@@ -56,7 +58,7 @@ function PuzzlesPage() {
           </p>
         </div>
         {isMyPuzzle ? (
-          <Link to="/schedules" className="btn">
+          <Link to={schedulesPathForPuzzleStatus(status)} className="btn">
             내 계획 보기
           </Link>
         ) : (
@@ -101,7 +103,11 @@ function PuzzlesPage() {
 
       <div className="pgrid">
         {items.map((p) => (
-          <PuzzleCard key={p.id} puzzle={p} onOpen={() => setOpen(p)} />
+          <PuzzleCard
+            key={p.id}
+            puzzle={p}
+            onOpen={isMyPuzzle ? () => setOpen(p) : undefined}
+          />
         ))}
       </div>
 
@@ -117,11 +123,13 @@ function PuzzlesPage() {
         </div>
       )}
 
-      {open && (
+      {isMyPuzzle && open && (
         <PuzzleDetailModal
           puzzleId={open.id}
           pieceCount={open.pieceCount}
           earnedPieceCount={open.earnedPieceCount}
+          summaryImageId={open.imageId}
+          summaryImageUrl={open.imageUrl}
           onClose={() => setOpen(null)}
         />
       )}

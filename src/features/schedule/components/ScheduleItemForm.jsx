@@ -2,19 +2,24 @@ import { useState } from 'react'
 
 import { ApiError, userMessage } from '../../../shared/api/apiError.js'
 import { isWithin } from '../utils/date.js'
+import {
+  ITEM_CATEGORY_OPTIONS,
+  STANDALONE_ITEM_DEFAULTS,
+  categoryLabelFor,
+} from '../utils/constants.js'
 
 /**
  * 할 일 추가/수정 폼 (시간 없이 날짜 단위).
- * - 추가: POST /schedules/{scheduleId}/items — title(필수), scheduledDate(필수, 계획 기간 안), description?, workload?(≥1), priority?(1~5)
- *         position 은 보내지 않음(미지정 → 그 날짜 맨 뒤). categoryId 는 카테고리 API(다른 도메인) 연동 전이라 제외.
- * - 수정: PATCH /schedule-items/{itemId} — 바뀐 필드만 전송. status 는 여기서 못 바꿈(상태 변경 API 사용).
- * - 서버 오류: 400 INVALID_REQUEST(fieldErrors → 필드 아래 표시), 422 DATE_OUTSIDE_SCHEDULE_PERIOD, 422 MAX_DAILY_TASKS_EXCEEDED
+ * - 추가: 계획을 고르면 POST /schedules/{scheduleId}/items, 고르지 않으면 POST /schedule-items.
+ * - 생성 계약: title, scheduledDate, estimatedMinutes 는 필수다.
+ * - 개인 일정: categoryId/workload 는 null로 고정하고 입력받지 않는다.
+ * - 수정: PATCH /schedule-items/{itemId} — 바뀐 필드만 전송. status 는 별도 API로 변경한다.
  *
  * props
- * - schedules: 선택 가능한 계획 목록 [{ id, title, startDate, endDate }] (fixedScheduleId 가 없을 때 select 로 보여줌)
+ * - schedules: 선택 가능한 계획 목록 [{ id, title, startDate, endDate }]
  * - fixedScheduleId: 상세 화면처럼 계획이 정해져 있을 때
  * - initial: 수정 모드일 때 기존 ScheduleItem
- * - onSubmit({ scheduleId, body }) — body 는 추가면 전체, 수정이면 바뀐 필드만
+ * - onSubmit({ scheduleId, body }) — 단독 작업의 scheduleId 는 null
  */
 function ScheduleItemForm({
   initial,
@@ -29,25 +34,42 @@ function ScheduleItemForm({
 }) {
   const isEdit = Boolean(initial)
   const [form, setForm] = useState({
-    scheduleId: fixedScheduleId ?? initial?.scheduleId ?? schedules[0]?.id ?? '',
+    scheduleId: initial ? (initial.scheduleId ?? '') : (fixedScheduleId ?? schedules[0]?.id ?? ''),
     title: initial?.title ?? '',
     scheduledDate: initial?.scheduledDate ?? defaultDate ?? '',
     description: initial?.description ?? '',
+    categoryId: initial?.categoryId ?? '',
+    workload: initial?.workload ?? '',
+    estimatedMinutes: initial?.estimatedMinutes ?? 30,
     priority: initial?.priority ?? 3,
-    workload: initial?.workload ?? 1,
+    position: initial?.position ?? '',
   })
   const [error, setError] = useState(null)
 
-  const schedule = schedules.find((s) => s.id === Number(form.scheduleId))
-  const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+  const schedule = schedules.find((candidate) => candidate.id === Number(form.scheduleId))
+  const isStandalone = form.scheduleId === ''
+  const update = (key) => (event) =>
+    setForm((current) => ({ ...current, [key]: event.target.value }))
   const fieldErrors = serverError instanceof ApiError ? serverError.fieldErrorMap : {}
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = (event) => {
+    event.preventDefault()
     const title = form.title.trim()
-    const workload = Number(form.workload)
+    const scheduleId = isStandalone ? null : Number(form.scheduleId)
+    const categoryId = isStandalone
+      ? STANDALONE_ITEM_DEFAULTS.categoryId
+      : form.categoryId === ''
+        ? undefined
+        : Number(form.categoryId)
+    const workload = isStandalone
+      ? STANDALONE_ITEM_DEFAULTS.workload
+      : form.workload === ''
+        ? undefined
+        : Number(form.workload)
+    const estimatedMinutes = Number(form.estimatedMinutes)
     const priority = Number(form.priority)
-    if (!form.scheduleId) return setError('계획을 선택하세요.')
+    const position = form.position === '' ? undefined : Number(form.position)
+
     if (!title) return setError('할 일 제목을 입력하세요.')
     if (title.length > 200) return setError('제목은 200자 이하여야 합니다.')
     if (!form.scheduledDate) return setError('날짜를 선택하세요.')
@@ -56,29 +78,63 @@ function ScheduleItemForm({
         `날짜는 계획 기간(${schedule.startDate} ~ ${schedule.endDate}) 안이어야 합니다.`,
       )
     }
-    if (!Number.isInteger(workload) || workload < 1)
-      return setError('작업량은 1 이상의 정수입니다.')
-    if (!Number.isInteger(priority) || priority < 1 || priority > 5)
-      return setError('우선순위는 1~5 입니다.')
+    if (
+      !isStandalone &&
+      categoryId !== undefined &&
+      !ITEM_CATEGORY_OPTIONS.some((category) => category.id === categoryId)
+    ) {
+      return setError('사용 가능한 카테고리를 선택하세요.')
+    }
+    if (
+      workload !== undefined &&
+      workload !== null &&
+      (!Number.isInteger(workload) || workload < 1)
+    ) {
+      return setError('작업량은 비워두거나 1 이상의 정수로 입력하세요.')
+    }
+    if (!Number.isInteger(estimatedMinutes) || estimatedMinutes < 1) {
+      return setError('예상 소요 시간은 1분 이상의 정수로 입력하세요.')
+    }
+    if (!Number.isInteger(priority) || priority < 1 || priority > 5) {
+      return setError('우선순위는 1~5입니다.')
+    }
+    if (position !== undefined && (!Number.isInteger(position) || position < 0)) {
+      return setError('표시 순서는 0 이상의 정수입니다.')
+    }
     setError(null)
 
     const full = {
       title,
       scheduledDate: form.scheduledDate,
-      description: form.description.trim() || null,
-      priority,
+      description: form.description.trim(),
+      categoryId,
       workload,
+      estimatedMinutes,
+      priority,
+      position,
     }
-    if (!isEdit) return onSubmit({ scheduleId: Number(form.scheduleId), body: full })
+    if (!isEdit) return onSubmit({ scheduleId, body: full })
 
-    // 수정: 바뀐 필드만 (PATCH 는 보낸 것만 변경)
+    // PATCH 는 보낸 값만 변경한다. 백엔드가 null을 "변경 없음"으로 처리하는 선택 필드는
+    // 빈 값으로 지우려 하지 않고 실제 숫자가 입력됐을 때만 전송한다.
     const patch = {}
     if (full.title !== initial.title) patch.title = full.title
     if (full.scheduledDate !== initial.scheduledDate) patch.scheduledDate = full.scheduledDate
-    if ((full.description ?? null) !== (initial.description ?? null))
-      patch.description = full.description
+    if (full.description !== (initial.description ?? '')) patch.description = full.description
+    if (
+      !isStandalone &&
+      full.workload !== undefined &&
+      full.workload !== initial.workload
+    ) {
+      patch.workload = full.workload
+    }
+    if (full.estimatedMinutes !== initial.estimatedMinutes) {
+      patch.estimatedMinutes = full.estimatedMinutes
+    }
     if (full.priority !== initial.priority) patch.priority = full.priority
-    if (full.workload !== initial.workload) patch.workload = full.workload
+    if (full.position !== undefined && full.position !== initial.position) {
+      patch.position = full.position
+    }
     if (Object.keys(patch).length === 0) return setError('변경된 내용이 없습니다.')
     return onSubmit({ scheduleId: initial.scheduleId, body: patch })
   }
@@ -89,15 +145,19 @@ function ScheduleItemForm({
         <label className="field">
           <span className="field__label">계획</span>
           <select className="select" value={form.scheduleId} onChange={update('scheduleId')}>
-            {schedules.length === 0 && <option value="">추가할 수 있는 계획이 없습니다</option>}
-            {schedules.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.title}
+            <option value="">계획 없음 · 개인 일정</option>
+            {schedules.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.title}
               </option>
             ))}
           </select>
+          <span className="field__hint">
+            개인 일정은 캘린더와 AI 계획 조정에는 반영되지만 퍼즐 조각에는 포함되지 않아요.
+          </span>
         </label>
       )}
+
       <label className="field">
         <span className="field__label">할 일</span>
         <input
@@ -110,6 +170,7 @@ function ScheduleItemForm({
         />
         {fieldErrors.title && <span className="field__error">{fieldErrors.title}</span>}
       </label>
+
       <label className="field">
         <span className="field__label">날짜</span>
         <input
@@ -120,16 +181,80 @@ function ScheduleItemForm({
           max={schedule?.endDate}
           onChange={update('scheduledDate')}
         />
-        {schedule && (
+        {schedule ? (
           <span className="field__hint">
             계획 기간 {schedule.startDate} ~ {schedule.endDate} · 하루 최대 작업 수(기본 5개, 모든
             계획 합산)를 넘으면 추가할 수 없어요
           </span>
+        ) : (
+          <span className="field__hint">계획 기간 제약 없이 선택한 날짜에 저장됩니다.</span>
         )}
         {fieldErrors.scheduledDate && (
           <span className="field__error">{fieldErrors.scheduledDate}</span>
         )}
       </label>
+
+      {isStandalone ? (
+        <div className="field">
+          <span className="field__label">개인 일정 기본값</span>
+          <span className="field__hint">
+            카테고리와 작업량은 입력하지 않고 기본값(null)으로 저장됩니다.
+          </span>
+        </div>
+      ) : isEdit ? (
+        <div className="field">
+          <span className="field__label">카테고리</span>
+          <span className="field__readonly">
+            {categoryLabelFor(initial?.categoryId) ?? '카테고리 없음'}
+          </span>
+        </div>
+      ) : (
+        <label className="field">
+          <span className="field__label">카테고리 (선택)</span>
+          <select className="select" value={form.categoryId} onChange={update('categoryId')}>
+            <option value="">카테고리 없음</option>
+            {ITEM_CATEGORY_OPTIONS.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.categoryId && <span className="field__error">{fieldErrors.categoryId}</span>}
+        </label>
+      )}
+
+      <div className="field-row">
+        {!isStandalone && (
+          <label className="field">
+            <span className="field__label">작업량 (선택)</span>
+            <input
+              type="number"
+              className="input"
+              min={1}
+              step={1}
+              value={form.workload}
+              placeholder="미지정"
+              onChange={update('workload')}
+            />
+            {fieldErrors.workload && <span className="field__error">{fieldErrors.workload}</span>}
+          </label>
+        )}
+        <label className="field">
+          <span className="field__label">예상 소요 시간 (분)</span>
+          <input
+            type="number"
+            className="input"
+            min={1}
+            step={1}
+            value={form.estimatedMinutes}
+            onChange={update('estimatedMinutes')}
+          />
+          {fieldErrors.estimatedMinutes && (
+            <span className="field__error">{fieldErrors.estimatedMinutes}</span>
+          )}
+        </label>
+      </div>
+
       <div className="field-row">
         <label className="field">
           <span className="field__label">우선순위</span>
@@ -143,28 +268,32 @@ function ScheduleItemForm({
           {fieldErrors.priority && <span className="field__error">{fieldErrors.priority}</span>}
         </label>
         <label className="field">
-          <span className="field__label">작업량</span>
+          <span className="field__label">표시 순서 (선택)</span>
           <input
             type="number"
             className="input"
-            min={1}
+            min={0}
             step={1}
-            value={form.workload}
-            onChange={update('workload')}
+            value={form.position}
+            placeholder="자동"
+            onChange={update('position')}
           />
-          {fieldErrors.workload && <span className="field__error">{fieldErrors.workload}</span>}
+          {fieldErrors.position && <span className="field__error">{fieldErrors.position}</span>}
         </label>
       </div>
+
       <label className="field">
         <span className="field__label">메모 (선택)</span>
         <textarea
           className="input"
           rows={2}
+          maxLength={5000}
           value={form.description}
           onChange={update('description')}
         />
         {fieldErrors.description && <span className="field__error">{fieldErrors.description}</span>}
       </label>
+
       {(error || serverError) && <p className="form-error">{error || userMessage(serverError)}</p>}
       <div className="form__actions">
         <button type="button" className="btn" onClick={onCancel}>
