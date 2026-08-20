@@ -62,6 +62,8 @@ const USER_MESSAGE_BY_CODE = {
   SCHEDULE_ITEM_NOT_FOUND: '할 일을 찾을 수 없습니다. 삭제되었을 수 있어요.',
   // 400
   INVALID_CURSOR: '목록 정보가 만료되어 처음부터 다시 불러옵니다.',
+  // 422 — 서버 문구를 그대로 써도 되지만, 화면 안내와 표현을 맞춘다
+  SCHEDULE_PERIOD_TOO_LONG: '계획 기간은 최대 30일까지 설정할 수 있어요.',
   // 기타
   NETWORK_ERROR: '서버에 연결할 수 없습니다. 백엔드(localhost:8080)가 실행 중인지 확인해 주세요.',
   UNKNOWN: '알 수 없는 오류가 발생했습니다.',

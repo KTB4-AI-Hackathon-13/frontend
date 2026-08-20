@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import Modal from './Modal.jsx'
 import PuzzleProgress from './PuzzleProgress.jsx'
 import ScheduleEditForm from './ScheduleEditForm.jsx'
-import { deleteSchedule, updateSchedule } from '../api/scheduleApi.js'
+import { deleteSchedule, fetchScheduleDetail, updateSchedule } from '../api/scheduleApi.js'
+import { useAsync } from '../hooks/useAsync.js'
+import { activeItemPeriod } from '../utils/period.js'
 import { SCHEDULE_STATUS_LABEL, colorForSchedule } from '../utils/constants.js'
 import { formatPeriod } from '../utils/date.js'
 import { userMessage } from '../../../shared/api/apiError.js'
@@ -14,6 +16,8 @@ import { userMessage } from '../../../shared/api/apiError.js'
  * - 수정: PATCH /schedules/{id} (title/startDate/endDate, 바뀐 필드만; 409/422 는 폼에 표시)
  * - 삭제: DELETE /schedules/{id} (작업 전부 함께 삭제, 인라인 확인)
  * - 할 일 자체는 홈 캘린더에서 다룬다 → "캘린더에서 보기" 링크
+ * - 기간을 줄일 때 서버가 409 로 막는 걸 미리 알 수 있도록, 열릴 때 상세를 한 번 받아
+ *   할 일이 놓인 날짜 범위를 편집 폼에 넘긴다 (그 범위 밖으로는 날짜를 못 고르게)
  *
  * @param {{ schedule: import('../api/types.js').ScheduleSummary, onClose: () => void, onChanged: () => Promise<unknown> | void }} props
  */
@@ -21,6 +25,9 @@ function ScheduleModal({ schedule: s, onClose, onChanged }) {
   const [serverError, setServerError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // 기간 축소 한계를 알기 위한 상세 조회 (실패해도 폼은 그대로 동작한다 — 그때는 서버 409 로 걸린다)
+  const { data: detail } = useAsync(() => fetchScheduleDetail(s.id), [s.id])
+  const itemPeriod = activeItemPeriod(detail)
 
   const run = async (fn) => {
     setBusy(true)
@@ -56,6 +63,7 @@ function ScheduleModal({ schedule: s, onClose, onChanged }) {
 
         <ScheduleEditForm
           schedule={s}
+          itemPeriod={itemPeriod}
           serverError={confirmDelete ? null : serverError}
           submitting={busy}
           onCancel={onClose}
