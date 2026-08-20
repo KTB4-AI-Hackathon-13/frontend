@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
-import { fetchSchedules } from '../features/schedule/api/scheduleApi.js'
+import { createSchedule, fetchSchedules } from '../features/schedule/api/scheduleApi.js'
+import Modal from '../features/schedule/components/Modal.jsx'
 import PuzzleProgress from '../features/schedule/components/PuzzleProgress.jsx'
+import ScheduleCreateForm from '../features/schedule/components/ScheduleCreateForm.jsx'
 import ScheduleModal from '../features/schedule/components/ScheduleModal.jsx'
 import { useCursorList } from '../features/schedule/hooks/useCursorList.js'
 import { useInfiniteScroll } from '../features/schedule/hooks/useInfiniteScroll.js'
@@ -27,13 +29,21 @@ const FILTERS = [
 
 /**
  * 내 계획 목록 — GET /schedules?status&size=20&cursor (커서 무한 스크롤, 최신순)
+ * - 선택된 탭은 URL 쿼리(?status=)가 기준이다. 퍼즐 상세에서 "계획"을 누르면
+ *   그 퍼즐의 상태(진행 중/완성)에 맞는 탭으로 바로 들어오고, 새로고침·뒤로가기에서도 유지된다
  * - 탭(status) 바뀌면 첫 페이지부터, 스크롤 끝에 닿으면 nextCursor 로 다음 페이지
  * - 행 클릭 → 계획 모달 (퍼즐 진행도 · 제목/기간 편집 PATCH · 삭제 DELETE). 상세 페이지 없음
- * - 스케줄 생성 화면은 없음 (AI 생성 API, 다른 담당)
+ * - 사용자는 직접 계획을 추가하거나 AI와 대화해 계획을 만들 수 있다.
  */
 function SchedulesPage() {
-  const [status, setStatus] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusParam = searchParams.get('status') ?? ''
+  // 모르는 값이 들어오면 전체 탭으로 (다른 화면에서 넘어온 쿼리를 그대로 믿지 않는다)
+  const status = FILTERS.some((f) => f.key === statusParam) ? statusParam : ''
   const [selected, setSelected] = useState(null) // ScheduleSummary
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createError, setCreateError] = useState(null)
+  const [creating, setCreating] = useState(false)
   const fetchPage = useCallback(
     (cursor) => fetchSchedules({ status: status || undefined, size: PAGE_SIZE, cursor }),
     [status],
@@ -44,6 +54,27 @@ function SchedulesPage() {
   )
   const sentinelRef = useInfiniteScroll(loadMore, { enabled: hasNext && !loading && !loadingMore })
 
+  const selectStatus = (key) => {
+    const next = new URLSearchParams(searchParams)
+    if (key) next.set('status', key)
+    else next.delete('status')
+    setSearchParams(next, { replace: true })
+  }
+
+  const handleCreate = async (body) => {
+    setCreating(true)
+    setCreateError(null)
+    try {
+      await createSchedule(body)
+      setCreateOpen(false)
+      reload()
+    } catch (e) {
+      setCreateError(e)
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <section className="page">
       <header className="page-head">
@@ -53,9 +84,21 @@ function SchedulesPage() {
             계획을 누르면 진행도를 보고 이름·기간을 고치거나 삭제할 수 있어요.
           </p>
         </div>
-        <Link to="/conversations" className="btn btn--primary">
-          AI 계획 만들기
-        </Link>
+        <div className="page-head__actions">
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setCreateError(null)
+              setCreateOpen(true)
+            }}
+          >
+            + 직접 계획 추가
+          </button>
+          <Link to="/conversations" className="btn btn--primary">
+            AI 계획 만들기
+          </Link>
+        </div>
       </header>
 
       <div className="tabs" role="tablist">
@@ -66,7 +109,7 @@ function SchedulesPage() {
             role="tab"
             aria-selected={status === f.key}
             className={`tab ${status === f.key ? 'is-active' : ''}`}
-            onClick={() => setStatus(f.key)}
+            onClick={() => selectStatus(f.key)}
           >
             {f.label}
           </button>
@@ -133,6 +176,17 @@ function SchedulesPage() {
           onClose={() => setSelected(null)}
           onChanged={reload}
         />
+      )}
+
+      {createOpen && (
+        <Modal title="직접 계획 추가" onClose={() => setCreateOpen(false)}>
+          <ScheduleCreateForm
+            onSubmit={handleCreate}
+            onCancel={() => setCreateOpen(false)}
+            serverError={createError}
+            submitting={creating}
+          />
+        </Modal>
       )}
     </section>
   )

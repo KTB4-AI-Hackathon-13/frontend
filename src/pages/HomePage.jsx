@@ -39,7 +39,8 @@ const SWIPE_COOLDOWN_MS = 650
  * - 오른쪽 할 일 패널 : GET /schedule-items/today (서버 기준 오늘, Asia/Seoul). 다른 날짜 클릭 시 캘린더 응답의 그 날짜
  *                      패널은 "나열 + 완료 체크"만, 행 클릭 → 할 일 모달(수정·상태·삭제)
  * - 체크박스         : PATCH /schedule-items/{id}/status (낙관적 업데이트 → 성공 시 캘린더+오늘 재조회)
- * - + 할 일 추가     : POST /schedules/{scheduleId}/items (계획 선택 목록은 GET /schedules?size=100 중 ACTIVE/DRAFT)
+ * - + 할 일 추가     : 계획 소속 작업은 POST /schedules/{scheduleId}/items, 개인 일정은
+ *                      POST /schedule-items (계획 목록은 GET /schedules?size=100 중 ACTIVE/DRAFT)
  *
  * 월 이동 수단 (useCalendarNav — 상태는 URL ?month=&date= 에 있어 뒤로가기/공유가 됨):
  *   ‹ › 월 · « » 해 · 오늘 · 제목 클릭 → 월/연도 피커 · "날짜로 이동" 입력 · 키보드(←→ PgUp/PgDn P/N T, Shift+←→ 해)
@@ -316,20 +317,20 @@ function HomePage() {
 
       {modal && (
         <Modal title="할 일 추가" onClose={() => setModal(null)}>
-          {schedules.error ? (
+          {schedules.error && (
             <ErrorNotice error={schedules.error} onRetry={schedules.reload} compact />
-          ) : schedules.loading && !schedules.data ? (
-            <p className="muted">계획 목록을 불러오는 중…</p>
-          ) : (
-            <ScheduleItemForm
-              schedules={schedulesForForm}
-              defaultDate={modal.defaultDate}
-              onSubmit={handleCreate}
-              onCancel={() => setModal(null)}
-              serverError={serverError}
-              submitting={busy}
-            />
           )}
+          {schedules.loading && !schedules.data && (
+            <p className="muted">계획 목록을 불러오는 중…</p>
+          )}
+          <ScheduleItemForm
+            schedules={schedulesForForm}
+            defaultDate={modal.defaultDate}
+            onSubmit={handleCreate}
+            onCancel={() => setModal(null)}
+            serverError={serverError}
+            submitting={busy}
+          />
         </Modal>
       )}
 
@@ -344,7 +345,7 @@ function HomePage() {
         />
       )}
 
-      {/* 퍼즐 조각 획득 효과 — puzzlePieceAwarded=true 일 때만 (7번 구현 전까지 서버는 false) */}
+      {/* 퍼즐 조각 획득 효과 — 계획 소속 작업의 puzzlePieceAwarded=true 일 때만 */}
       <PieceAwardEffect award={award} onDone={clearAward} />
       <Toast toast={toast} />
     </section>

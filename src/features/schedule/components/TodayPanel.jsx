@@ -1,8 +1,7 @@
 import {
   ITEM_STATUS,
   ITEM_STATUS_LABEL,
-  ITEM_SOURCE_LABEL,
-  ITEM_TYPE_LABEL,
+  STANDALONE_ITEM_LABEL,
   categoryLabelFor,
   colorForSchedule,
 } from '../utils/constants.js'
@@ -58,8 +57,6 @@ function TodayPanel({
           const inactive = st === ITEM_STATUS.SKIPPED || cancelled
           const isPending = pending.has(it.id)
           const category = categoryLabelFor(it.categoryId)
-          const itemType = ITEM_TYPE_LABEL[it.itemType]
-          const source = ITEM_SOURCE_LABEL[it.source]
           return (
             <li
               key={it.id}
@@ -88,7 +85,14 @@ function TodayPanel({
                   )}
                 </span>
                 <span className="today__schedule">
-                  {[it.scheduleTitle, category ?? itemType, source].filter(Boolean).join(' · ')}
+                  {[
+                    it.scheduleTitle ?? STANDALONE_ITEM_LABEL,
+                    category,
+                    it.estimatedMinutes ? `예상 ${it.estimatedMinutes}분` : null,
+                    it.workload != null ? `작업량 ${it.workload}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </span>
               </button>
             </li>

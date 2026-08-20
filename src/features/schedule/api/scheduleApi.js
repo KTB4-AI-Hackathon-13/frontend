@@ -7,6 +7,7 @@
  *    같은 날짜 안 정렬은 서버가 준 순서(position → priority → id)를 그대로 쓴다.
  */
 import client from '../../../shared/api/client.js'
+import { STANDALONE_ITEM_DEFAULTS } from '../utils/constants.js'
 
 /** @typedef {import('./types.js').ScheduleSummary} ScheduleSummary */
 /** @typedef {import('./types.js').ScheduleDetail} ScheduleDetail */
@@ -19,6 +20,10 @@ import client from '../../../shared/api/client.js'
 const compact = (obj) =>
   Object.fromEntries(Object.entries(obj ?? {}).filter(([, v]) => v !== undefined))
 
+/** 캘린더/오늘 응답의 작업에는 날짜가 없으므로 상위 일자 값을 편집용 모델에 주입한다. */
+const withScheduledDate = (date, items = []) =>
+  items.map((item) => ({ ...item, scheduledDate: date }))
+
 // ---------- 5. 스케줄 API ----------
 
 /**
@@ -30,6 +35,15 @@ export function fetchSchedules({ status, size = 20, cursor } = {}) {
   return client.get('/schedules', {
     params: compact({ status: status || undefined, size, cursor: cursor || undefined }),
   })
+}
+
+/**
+ * 사용자가 직접 계획을 만든다. `source/status/version`은 서버 기본 정책을 따른다.
+ * body: title, startDate, endDate, description?
+ * @returns {Promise<ScheduleSummary>}
+ */
+export function createSchedule(body) {
+  return client.post('/schedules', compact(body))
 }
 
 /**
@@ -66,28 +80,41 @@ export function submitAiPlan(scheduleId, aiPlanJson) {
  * 4.5 월별 캘린더 `GET /calendar?year&month` — 작업 있는 날짜만, 여러 스케줄 섞여 옴
  * @returns {Promise<CalendarResponse>}
  */
-export function fetchCalendar(year, month) {
-  return client.get('/calendar', { params: { year, month } })
+export async function fetchCalendar(year, month) {
+  const data = await client.get('/calendar', { params: { year, month } })
+  return {
+    ...data,
+    days: (data.days ?? []).map((day) => ({
+      ...day,
+      items: withScheduledDate(day.date, day.items),
+    })),
+  }
 }
 
 /**
  * 4.6 오늘 할 일 `GET /schedule-items/today` — 서버 기준 오늘(Asia/Seoul)
  * @returns {Promise<TodayResponse>}
  */
-export function fetchToday() {
-  return client.get('/schedule-items/today')
+export async function fetchToday() {
+  const data = await client.get('/schedule-items/today')
+  return { ...data, items: withScheduledDate(data.date, data.items) }
 }
 
 // ---------- 6. 작업 API ----------
 
 /**
- * 5.1 추가 `POST /schedules/{scheduleId}/items` → 201
- * body: title, scheduledDate, itemType, description?, categoryId?, workload?,
- *       estimatedMinutes?, priority?, position?
+ * 5.1 추가: 계획 소속이면 `POST /schedules/{scheduleId}/items`, 단독 작업이면
+ * `POST /schedule-items` → 201
+ * body: title, scheduledDate, estimatedMinutes, description?, categoryId?, workload?,
+ *       priority?, position?
+ * 단독 작업은 카테고리와 작업량을 null로 강제 정규화한다.
  * 422 DATE_OUTSIDE_SCHEDULE_PERIOD / 422 MAX_DAILY_TASKS_EXCEEDED / 400 INVALID_REQUEST
  * @returns {Promise<ScheduleItem>}
  */
 export function createItem(scheduleId, body) {
+  if (scheduleId == null) {
+    return client.post('/schedule-items', compact({ ...body, ...STANDALONE_ITEM_DEFAULTS }))
+  }
   return client.post(`/schedules/${scheduleId}/items`, compact(body))
 }
 

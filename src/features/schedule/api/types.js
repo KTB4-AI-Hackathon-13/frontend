@@ -4,15 +4,11 @@
  *
  * @typedef {'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'} ScheduleStatus
  * @typedef {'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'CANCELLED'} ItemStatus
- * @typedef {'TASK' | 'STUDY' | 'PRACTICE' | 'REVIEW' | 'EXERCISE' | 'REST' | 'ETC'} ItemType
- * @typedef {'USER' | 'AI' | 'RESCHEDULE_BATCH'} ItemSource
- *
  * @typedef {Object} AiPlanItem
  * @property {string} scheduled_date
  * @property {string} title
  * @property {string} description
  * @property {number} estimated_min
- * @property {ItemType} item_type
  *
  * @typedef {Object} AiPlanJson
  * @property {string} summary
@@ -30,19 +26,17 @@
  *
  * @typedef {Object} ScheduleItem
  * @property {number} id
- * @property {number} scheduleId
+ * @property {number | null} scheduleId          null이면 계획에 속하지 않은 단독 작업
  * @property {number | null} categoryId
  * @property {number | null} parentItemId
  * @property {string} title
  * @property {string | null} description
  * @property {string} scheduledDate            YYYY-MM-DD
- * @property {number | null} estimatedMinutes
- * @property {ItemType} itemType
+ * @property {number} estimatedMinutes         생성 요청에서 필수(1 이상)
  * @property {number} position                 같은 날짜 안 표시 순서 (0부터) — 서버 정렬 그대로 사용
- * @property {number} workload                 상대적 업무량 (기본 1)
+ * @property {number | null} workload          선택 상대적 업무량
  * @property {number} priority                 1(높음) ~ 5(낮음), 기본 3
  * @property {ItemStatus} status
- * @property {ItemSource} source
  * @property {string | null} completedAt       ISO 8601
  *
  * @typedef {Object} ScheduleDay
@@ -55,19 +49,16 @@
  *
  * @typedef {Object} DailyItem                 캘린더 / 오늘 할 일 항목 (어느 스케줄인지 포함)
  * @property {number} id
- * @property {number} scheduleId
- * @property {string} scheduleTitle
+ * @property {number | null} scheduleId
+ * @property {string | null} scheduleTitle
  * @property {number | null} categoryId
  * @property {string} title
- * @property {string | null} description
- * @property {string} scheduledDate
- * @property {number | null} estimatedMinutes
- * @property {ItemType} itemType
+ * @property {string} scheduledDate            일별 응답의 상위 date를 API 어댑터가 주입
+ * @property {number} estimatedMinutes
  * @property {number} position
- * @property {number} workload
+ * @property {number | null} workload
  * @property {number} priority
  * @property {ItemStatus} status
- * @property {ItemSource} source
  * @property {string | null} completedAt
  *
  * @typedef {Object} DailyItemsDay
@@ -89,7 +80,7 @@
  * @property {number} itemId
  * @property {ItemStatus} status
  * @property {string | null} completedAt
- * @property {boolean} puzzlePieceAwarded      퍼즐 도메인(7번) 구현 전까지 항상 false
+ * @property {boolean} puzzlePieceAwarded      단독 작업은 항상 false
  * @property {number | null} puzzlePieceId
  *
  * @template T

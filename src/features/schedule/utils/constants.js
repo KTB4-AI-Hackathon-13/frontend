@@ -11,15 +11,11 @@ export const ITEM_STATUS = {
   SKIPPED: 'SKIPPED',
   CANCELLED: 'CANCELLED',
 }
-export const ITEM_TYPE = {
-  TASK: 'TASK',
-  STUDY: 'STUDY',
-  PRACTICE: 'PRACTICE',
-  REVIEW: 'REVIEW',
-  EXERCISE: 'EXERCISE',
-  REST: 'REST',
-  ETC: 'ETC',
-}
+/** 계획에 속하지 않은 개인 일정은 세부 분류를 입력받지 않고 이 값으로 저장한다. */
+export const STANDALONE_ITEM_DEFAULTS = Object.freeze({
+  categoryId: null,
+  workload: null,
+})
 
 export const SCHEDULE_STATUS_LABEL = {
   DRAFT: '검토 중',
@@ -34,22 +30,6 @@ export const ITEM_STATUS_LABEL = {
   SKIPPED: '건너뜀',
   CANCELLED: '취소',
 }
-export const ITEM_TYPE_LABEL = {
-  TASK: '일반 작업',
-  STUDY: '학습',
-  PRACTICE: '실습',
-  REVIEW: '복습',
-  EXERCISE: '운동',
-  REST: '휴식',
-  ETC: '기타',
-}
-
-export const ITEM_SOURCE_LABEL = {
-  USER: '직접 생성',
-  AI: 'AI 생성',
-  RESCHEDULE_BATCH: 'AI 재분배',
-}
-
 export const ITEM_PRIORITY_LABEL = {
   1: '매우 높음',
   2: '높음',
@@ -70,10 +50,14 @@ export const categoryLabelFor = (categoryId) =>
 
 /** 계획별 색상 (와이어프레임: 계획별 색상, 완료 항목은 흐리게) */
 export const SCHEDULE_COLORS = ['#5b6cff', '#2fb38a', '#f2a33c', '#e06aa6', '#4db2e0', '#9b6cf2']
+export const STANDALONE_ITEM_LABEL = '개인 일정'
+export const STANDALONE_ITEM_COLOR = '#8491a8'
 export const colorForSchedule = (scheduleId) =>
-  SCHEDULE_COLORS[Math.abs(Number(scheduleId)) % SCHEDULE_COLORS.length]
+  scheduleId == null
+    ? STANDALONE_ITEM_COLOR
+    : SCHEDULE_COLORS[Math.abs(Number(scheduleId)) % SCHEDULE_COLORS.length]
 
-/** 계획 기간 상한 (백엔드 ScheduleService.MAX_SCHEDULE_PERIOD_DAYS 와 같아야 함) */
+/** 계획 수정 기간 상한 (백엔드 ScheduleService.MAX_SCHEDULE_PERIOD_DAYS 와 같아야 함) */
 export const MAX_SCHEDULE_PERIOD_DAYS = 30
 
 /** 하루 작업 수 제한 (user_preferences.max_daily_tasks 기본값) */

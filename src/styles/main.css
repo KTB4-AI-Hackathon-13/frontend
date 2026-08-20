@@ -2708,3 +2708,61 @@ a.schedule-modal__edit-option:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* 달력 날짜 셀의 할 일을 계획 단위 그룹 칩으로 표시 */
+.cal__schedule-chip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-left-width: 4px;
+  background: color-mix(in srgb, var(--chip-color) 10%, var(--surface));
+}
+
+.cal__schedule-chip.is-continued-before {
+  width: calc(100% + 7px);
+  margin-left: -7px;
+  padding-left: 8px;
+  border-left-width: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.cal__schedule-chip.is-continued-after {
+  width: calc(100% + 7px);
+  margin-right: -7px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.cal__schedule-chip.is-continued-before.is-continued-after {
+  width: calc(100% + 14px);
+  border-radius: 0;
+}
+
+.cal__schedule-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal__schedule-slot {
+  min-height: 24px;
+}
+
+.cal__schedule-count {
+  min-width: 17px;
+  height: 17px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  margin-left: auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip-color) 18%, var(--surface));
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+}
