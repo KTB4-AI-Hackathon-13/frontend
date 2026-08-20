@@ -55,17 +55,12 @@ function RankBadge({ rank }) {
   )
 }
 
-function RankingRows({ items, type, currentUserId }) {
-  const toPuzzleBy = (item) => {
-    if (currentUserId != null && String(item.userId) === String(currentUserId)) {
-      return '/puzzles'
-    }
-    return {
-      pathname: '/puzzles',
-      search: `userId=${encodeURIComponent(String(item.userId))}&nickname=${encodeURIComponent(item.nickname || '')}`,
-      state: { userId: item.userId, nickname: item.nickname },
-    }
-  }
+function RankingRows({ items, type }) {
+  const toPuzzleBy = (item) => ({
+    pathname: '/puzzles',
+    search: `userId=${encodeURIComponent(String(item.userId))}&nickname=${encodeURIComponent(item.nickname || '')}`,
+    state: { userId: item.userId, nickname: item.nickname },
+  })
 
   return (
     <ol className="ranking__list">
