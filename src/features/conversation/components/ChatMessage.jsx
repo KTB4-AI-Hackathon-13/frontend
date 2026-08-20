@@ -1,7 +1,8 @@
-function parseMessageContent(message) {
-  if (message.role !== 'ASSISTANT') return message.content
+import PlanCard from './PlanCard.jsx'
 
-  const payload = message.planDraft ?? (() => {
+function messagePayload(message) {
+  if (message.role !== 'ASSISTANT') return null
+  return message.planDraft ?? (() => {
     if (typeof message.content !== 'string' || !message.content.trimStart().startsWith('{')) {
       return null
     }
@@ -11,6 +12,10 @@ function parseMessageContent(message) {
       return null
     }
   })()
+}
+
+function parseMessageContent(message, payload) {
+  if (message.role !== 'ASSISTANT') return message.content
 
   if (!payload || typeof payload !== 'object') return message.content
   if (typeof payload.assistant_message === 'string') return payload.assistant_message
@@ -29,9 +34,10 @@ function parseMessageContent(message) {
   return message.content
 }
 
-function ChatMessage({ message }) {
+function ChatMessage({ message, completedTaskIds = [] }) {
   const isUser = message.role === 'USER'
-  const content = parseMessageContent(message)
+  const payload = messagePayload(message)
+  const content = parseMessageContent(message, payload)
   const time = new Intl.DateTimeFormat('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -47,6 +53,13 @@ function ChatMessage({ message }) {
         <time dateTime={message.createdAt}>{time}</time>
       </div>
       <p>{content}</p>
+      {payload?.plan && (payload.plan.daily_tasks?.length ?? 0) > 0 && (
+        <PlanCard
+          plan={payload.plan}
+          readyToConfirm={payload.ready_to_confirm ?? payload.readyToConfirm}
+          completedTaskIds={completedTaskIds}
+        />
+      )}
     </article>
   )
 }

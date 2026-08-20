@@ -285,7 +285,7 @@ export function useConversation({
           ...current.map((message) =>
             message.id === optimisticMessage.id ? { ...message, pending: false } : message,
           ),
-          localMessage('ASSISTANT', result.assistant_message),
+          localMessage('ASSISTANT', result.assistant_message, { planDraft: result }),
         ])
         setPlanTurn(result)
         if (result.confirmed && result.submitted && result.schedule_id) {
@@ -342,7 +342,10 @@ export function useConversation({
           templateAnswers,
         })
         setMessages((current) =>
-          [...current, localMessage('ASSISTANT', result.assistant_message)].filter(Boolean),
+          [
+            ...current,
+            localMessage('ASSISTANT', result.assistant_message, { planDraft: result }),
+          ].filter(Boolean),
         )
         const hasPlan = (result.plan?.daily_tasks?.length ?? 0) > 0
         if (hasPlan) {

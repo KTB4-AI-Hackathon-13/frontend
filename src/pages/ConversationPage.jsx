@@ -6,7 +6,6 @@ import ChatMessage from '../features/conversation/components/ChatMessage.jsx'
 import ConversationSidebar from '../features/conversation/components/ConversationSidebar.jsx'
 import TypingIndicator from '../features/conversation/components/TypingIndicator.jsx'
 import TemplateForm from '../features/conversation/components/TemplateForm.jsx'
-import PlanCard from '../features/conversation/components/PlanCard.jsx'
 import { useConversation } from '../features/conversation/hooks/useConversation.js'
 import '../features/conversation/styles/conversation.css'
 
@@ -120,7 +119,11 @@ function ConversationPage() {
                   </div>
                 )}
                 {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    completedTaskIds={planTurn?.completed_task_ids}
+                  />
                 ))}
                 {template && (
                   <div className="chat-message">
@@ -130,15 +133,6 @@ function ConversationPage() {
                       initialAnswers={templateDraft}
                       onAnswersChange={updateTemplateDraft}
                       onSubmit={submitTemplateAnswers}
-                    />
-                  </div>
-                )}
-                {planTurn?.plan && (
-                  <div className="chat-message">
-                    <PlanCard
-                      plan={planTurn.plan}
-                      readyToConfirm={planTurn.ready_to_confirm}
-                      completedTaskIds={planTurn.completed_task_ids}
                     />
                   </div>
                 )}
