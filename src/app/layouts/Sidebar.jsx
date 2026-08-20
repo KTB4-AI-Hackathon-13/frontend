@@ -5,7 +5,6 @@ const NAV = [
   { to: '/conversations', label: 'AI 계획 만들기', icon: 'spark' },
   { to: '/schedules', label: '내 계획', icon: 'list' },
   { to: '/puzzles', label: '내 퍼즐', icon: 'puzzle' },
-  { to: '/gallery', label: '퍼즐 갤러리(아직 안 됨)', icon: 'gallery' },
   { to: '/rankings', label: '랭킹', icon: 'ranking' },
 ]
 
@@ -15,7 +14,6 @@ function NavIcon({ name }) {
     spark: <><path d="m12 3 1.2 4.1L17 9l-3.8 1.9L12 15l-1.2-4.1L7 9l3.8-1.9L12 3Z" /><path d="m18.5 14 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3Z" /></>,
     list: <><rect x="4" y="4" width="16" height="16" rx="2.5" /><path d="M8 9h8M8 13h8M8 17h5" /></>,
     puzzle: <path d="M8.5 4H4v5a2.5 2.5 0 1 1 0 5v6h6a2.5 2.5 0 1 0 5 0h5v-6a2.5 2.5 0 1 0 0-5V4h-5.5a3 3 0 1 1-6 0Z" />,
-    gallery: <><rect x="3.5" y="4" width="17" height="16" rx="2.5" /><circle cx="9" cy="9" r="1.5" /><path d="m5.5 18 4.2-4.5 3 3 2.4-2.5 3.4 4" /></>,
     ranking: <><path d="M5 20v-5h4v5M10 20V9h4v11M15 20V4h4v16" /><path d="M3 20h18" /></>,
   }
   return <svg className="sidebar__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">{paths[name]}</svg>
