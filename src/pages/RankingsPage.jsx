@@ -55,22 +55,18 @@ function RankBadge({ rank }) {
   )
 }
 
-function RankingRows({ items, type }) {
-  const toPuzzleBy = (item) => ({
-    pathname: '/puzzles',
-    search: `userId=${encodeURIComponent(String(item.userId))}&nickname=${encodeURIComponent(item.nickname || '')}`,
-    state: { userId: item.userId, nickname: item.nickname },
-  })
+/**
+ * 순위 행 — 타인의 퍼즐은 열지 않는다.
+ * 내 행만 내 퍼즐로 가는 링크이고, 나머지는 목록으로만 보여준다.
+ */
+function RankingRows({ items, type, currentUserId }) {
+  const isMe = (item) => currentUserId != null && String(item.userId) === String(currentUserId)
 
   return (
     <ol className="ranking__list">
-      {items.map((item) => (
-        <li className={`ranking__row ${item.rank <= 3 ? 'is-podium' : ''}`} key={item.userId}>
-          <Link
-            to={toPuzzleBy(item)}
-            className="ranking__row-link"
-            aria-label={`${item.nickname} 퍼즐 보기`}
-          >
+      {items.map((item) => {
+        const body = (
+          <>
             <div className="ranking__position">
               <RankBadge rank={item.rank} />
             </div>
@@ -81,9 +77,21 @@ function RankingRows({ items, type }) {
               <strong>{item.nickname}</strong>
             </div>
             <strong className="ranking__score">{formatScore(item.score, type)}</strong>
-          </Link>
-        </li>
-      ))}
+          </>
+        )
+
+        return (
+          <li className={`ranking__row ${item.rank <= 3 ? 'is-podium' : ''}`} key={item.userId}>
+            {isMe(item) ? (
+              <Link to="/puzzles" className="ranking__row-link" aria-label="내 퍼즐 보기">
+                {body}
+              </Link>
+            ) : (
+              <div className="ranking__row-link is-static">{body}</div>
+            )}
+          </li>
+        )
+      })}
     </ol>
   )
 }

@@ -14,7 +14,6 @@ import ErrorNotice from '../../../shared/components/ErrorNotice.jsx'
  * 퍼즐 상세 모달 (와이어프레임 09-1 변형 — 이 프로젝트는 상세 페이지 대신 모달).
  * - GET /puzzles/{puzzleId} 로 조각별 획득 상태를 받아 판을 그린다
  * - 조각에 마우스를 올리면 어떤 할 일로 딴 조각인지 + 몇 번째로 획득했는지(position) 보여준다
- * - 공개 범위(visibility)는 서버 값을 배지로 보여주기만 한다. 변경 PATCH·좋아요·신고는 백엔드에 없어 UI 도 두지 않는다
  * - "계획" 링크는 이 퍼즐 상태에 맞는 내 계획 탭(진행 중/완료)으로 보낸다
  */
 function PuzzleDetailModal({
@@ -44,7 +43,7 @@ function PuzzleDetailModal({
         imageUrl: puzzle.imageUrl ?? summaryImageUrl,
       }
     : null
-  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError } =
+  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError, retryImage } =
     usePuzzleImage(imagePuzzle)
   const complete = puzzle?.status === 'COMPLETED'
   const pct = puzzle?.pieceCount
@@ -85,9 +84,6 @@ function PuzzleDetailModal({
               <span className={`status status--${complete ? 'completed' : 'active'}`}>
                 {complete ? '완성' : '진행 중'}
               </span>
-              <span className={`pill ${puzzle.visibility === 'PUBLIC' ? '' : 'pill--muted'}`}>
-                {puzzle.visibility === 'PUBLIC' ? '공개' : '비공개'}
-              </span>
             </div>
 
             <dl className="summary__list">
@@ -126,6 +122,11 @@ function PuzzleDetailModal({
                   ? ' 그림을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.'
                   : ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.')}
             </p>
+            {imageFailed && (
+              <button type="button" className="btn btn--sm" onClick={retryImage}>
+                이미지 다시 불러오기
+              </button>
+            )}
           </div>
         </div>
       )}

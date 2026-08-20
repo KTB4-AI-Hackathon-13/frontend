@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { getImageUrl, invalidateImageUrl } from '../api/imageApi.js'
+import { getImageUrl, invalidateImageUrl, subscribeImageUrl } from '../api/imageApi.js'
 
 /** 만료 몇 초 전에 미리 갱신할지 (서명 URL 기본 유효 시간 10분) */
 const REFRESH_MARGIN_MS = 45_000
 
 /**
- * 퍼즐 그림 URL — schedule id로 연결된 직접 URL을 우선하고 기존 이미지 API를 폴백으로 쓴다.
+ * 퍼즐 그림 URL — 백엔드 images.id로 S3 presigned URL을 발급받는다.
  *
- * - `puzzle.imageUrl`은 이미지 테이블의 `schedule_id`와 연결된 `img_url`이다.
- * - 직접 URL이 없거나 로드에 실패하고 `puzzle.imageId`가 있으면 `GET /images/{imageId}`의
- *   S3 presigned URL을 쓰고, 만료 전에 자동 재발급한다.
+ * - `puzzle.imageId`가 있으면 `GET /images/{imageId}`의 S3 presigned URL을 쓰고,
+ *   `urlExpiresAt` 만료 전에 자동 재발급한다.
+ * - 전환기 호환을 위해 `puzzle.imageUrl` 직접 URL도 받을 수 있지만 장기 저장하지 않는다.
  * - 두 이미지 소스가 모두 없거나 조회에 실패하면 `imageUrl`은 null이다.
  *   그때 퍼즐판은 그림 없이 조각 틀만 그린다 (진행도는 그대로 보인다).
  * - `onImageError` 를 이미지 태그에 물려두면, URL 이 예상보다 일찍 죽었을 때 캐시를 버리고 한 번 재발급한다
@@ -33,23 +33,24 @@ export function usePuzzleImage(puzzle, { enabled = true } = {}) {
   const retriedFor = useRef(null)
 
   useEffect(() => {
+    if (!imageId) return undefined
+    return subscribeImageUrl(imageId, ({ url, expiresAt }) => {
+      setSigned({ imageId, url, expiresAt })
+      setFailedImageIdKey((key) => (key === imageIdKey ? null : key))
+    })
+  }, [imageId, imageIdKey])
+
+  useEffect(() => {
     const directAvailable = directKey && failedDirectKey !== directKey
     if (!imageId || !enabled || directAvailable || failedImageIdKey === imageIdKey) {
       return undefined
     }
     let cancelled = false
-    let timer = null
     getImageUrl(imageId).then(
       ({ url, expiresAt }) => {
         if (cancelled) return
-        setSigned({ imageId, url })
+        setSigned({ imageId, url, expiresAt })
         setFailedImageIdKey((key) => (key === imageIdKey ? null : key))
-        // 만료 직전에 스스로 갱신 (화면을 오래 열어둬도 이미지가 깨지지 않게)
-        const wait = Math.max(5_000, expiresAt - Date.now() - REFRESH_MARGIN_MS)
-        timer = setTimeout(() => {
-          invalidateImageUrl(imageId)
-          setReloadTick((t) => t + 1)
-        }, wait)
       },
       () => {
         // 401(세션 없음)·403(업로더 아님)·404 — 그림 없이 조각 틀만 그린다
@@ -58,9 +59,18 @@ export function usePuzzleImage(puzzle, { enabled = true } = {}) {
     )
     return () => {
       cancelled = true
-      if (timer) clearTimeout(timer)
     }
   }, [directKey, enabled, failedDirectKey, failedImageIdKey, imageId, imageIdKey, reloadTick])
+
+  useEffect(() => {
+    if (!enabled || signed?.imageId !== imageId || !signed.expiresAt) return undefined
+    const wait = Math.max(5_000, signed.expiresAt - Date.now() - REFRESH_MARGIN_MS)
+    const timer = setTimeout(() => {
+      invalidateImageUrl(imageId)
+      setReloadTick((tick) => tick + 1)
+    }, wait)
+    return () => clearTimeout(timer)
+  }, [enabled, imageId, signed])
 
   /** <image> 로드 실패 시: 만료된 URL 로 보고 한 번만 재발급 */
   const onImageError = useCallback(() => {
@@ -80,6 +90,16 @@ export function usePuzzleImage(puzzle, { enabled = true } = {}) {
     setReloadTick((t) => t + 1)
   }, [directKey, failedDirectKey, imageId, imageIdKey])
 
+  /** 이미지 API 또는 S3 로드 실패 뒤 사용자가 다시 시도할 때 캐시까지 비우고 새 URL을 받는다. */
+  const retryImage = useCallback(() => {
+    if (imageId) invalidateImageUrl(imageId)
+    setSigned(null)
+    setFailedDirectKey(null)
+    setFailedImageIdKey(null)
+    retriedFor.current = null
+    setReloadTick((tick) => tick + 1)
+  }, [imageId])
+
   const directAvailable = enabled && directKey && failedDirectKey !== directKey
   const signedUrl = signed?.imageId === imageId ? signed.url : null
   const imageUrl = directAvailable ? directUrl : enabled ? signedUrl : null
@@ -96,5 +116,6 @@ export function usePuzzleImage(puzzle, { enabled = true } = {}) {
       enabled && !imageUrl && Boolean(imageId) && failedImageIdKey !== imageIdKey,
     imageFailed,
     onImageError,
+    retryImage,
   }
 }

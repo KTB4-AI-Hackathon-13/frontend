@@ -93,7 +93,7 @@ function PuzzlesPage() {
           <p className="muted small">
             {isMyPuzzle
               ? '계획의 할 일을 처음 완료하면 그 계획의 퍼즐이 만들어지고 첫 조각이 채워져요.'
-              : '공개된 퍼즐이 없거나 비공개 설정인 사용자일 수 있어요.'}
+              : '공개된 완성 퍼즐이 아직 없어요.'}
           </p>
           <Link to="/" className="btn">
             오늘 할 일 보러가기
