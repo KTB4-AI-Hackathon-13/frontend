@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import AuthField from '../features/auth/AuthField.jsx'
 import AuthShell from '../features/auth/AuthShell.jsx'
 import { useAuth } from '../features/auth/useAuth.js'
 import { login } from '../features/auth/authApi.js'
+import Toast from '../features/schedule/components/Toast.jsx'
+import { useToast } from '../features/schedule/hooks/useToast.js'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -13,6 +15,17 @@ function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const { toast, show: showToast } = useToast(3000)
+
+  useEffect(() => {
+    if (!location.state?.loggedOut) return
+
+    showToast('로그아웃되었습니다.', 'success')
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: { ...location.state, loggedOut: false },
+    })
+  }, [location.pathname, location.search, location.state, navigate, showToast])
 
   const update = (event) => {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
@@ -39,16 +52,15 @@ function LoginPage() {
       eyebrow="WELCOME BACK"
       title={
         <>
-          WELCOME BACK.
+          PICK UP
           <br />
-          KEEP BECOMING.
+          WHERE YOU LEFT OFF.
         </>
       }
-      description="계속 성장하고 있는 또 다른 나를 만나보세요."
+      description="오늘의 계획을 이어가세요."
     >
       <div className="auth-glass__heading">
-        <span>SIGN IN</span>
-        <strong>01</strong>
+        <span>로그인</span>
       </div>
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         {location.state?.signedUp && (
@@ -60,14 +72,11 @@ function LoginPage() {
         {location.state?.withdrawn && (
           <p className="auth-form__success" role="status">회원 탈퇴가 처리되었습니다.</p>
         )}
-        {location.state?.loggedOut && (
-          <p className="auth-form__success" role="status">안전하게 로그아웃되었습니다.</p>
-        )}
         <AuthField
           id="email"
           label="이메일"
           type="email"
-          placeholder="you@example.com"
+          placeholder="가입한 이메일을 입력하세요"
           autoComplete="email"
           value={form.email}
           onChange={update}
@@ -76,19 +85,20 @@ function LoginPage() {
           id="password"
           label="비밀번호"
           type="password"
-          placeholder="8자 이상 입력하세요"
+          placeholder="비밀번호를 입력하세요"
           autoComplete="current-password"
           value={form.password}
           onChange={update}
         />
         {error && <p className="auth-form__error" role="alert">{error}</p>}
         <button className="auth-submit" type="submit" disabled={submitting}>
-          {submitting ? '로그인 중...' : '로그인'} <span aria-hidden="true">→</span>
+          {submitting ? '로그인 중...' : '로그인하고 계속하기'} <span aria-hidden="true">→</span>
         </button>
       </form>
       <p className="auth-switch">
-        아직 계정이 없나요? <Link to="/signup">회원가입</Link>
+        AI Planner가 처음인가요? <Link to="/signup">계정 만들기</Link>
       </p>
+      <Toast toast={toast} />
     </AuthShell>
   )
 }
