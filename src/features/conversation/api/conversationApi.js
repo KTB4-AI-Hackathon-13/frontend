@@ -20,8 +20,8 @@ export function getConversationBySchedule(scheduleId) {
   return apiClient.get(`/schedules/${scheduleId}/conversation`)
 }
 
-export function generateScheduleTemplate(conversationId, text) {
-  return apiClient.post('/schedules/templates', { conversationId, text }, { timeout: 60000 })
+export function generateScheduleTemplate(conversationId, message) {
+  return apiClient.post('/schedules/templates', { conversationId, message }, { timeout: 60000 })
 }
 
 export function generateSchedule({ conversationId, goalSummary, category, templateAnswers }) {

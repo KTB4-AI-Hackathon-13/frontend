@@ -47,7 +47,7 @@ function PuzzlesPage() {
   const sentinelRef = useInfiniteScroll(loadMore, { enabled: hasNext && !loading && !loadingMore })
 
   return (
-    <section className="page">
+    <section className="page page--centered">
       <header className="page-head">
         <div>
           <h1 className="page-title">{isMyPuzzle ? '내 퍼즐' : `${pageSubject}의 퍼즐`}</h1>
