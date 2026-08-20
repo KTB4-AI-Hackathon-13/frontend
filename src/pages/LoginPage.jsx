@@ -4,7 +4,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthField from '../features/auth/AuthField.jsx'
 import AuthShell from '../features/auth/AuthShell.jsx'
 import { useAuth } from '../features/auth/useAuth.js'
-import { login, startKakaoLogin } from '../features/auth/authApi.js'
+import { login } from '../features/auth/authApi.js'
+// import { startKakaoLogin } from '../features/auth/authApi.js'
 import Toast from '../features/schedule/components/Toast.jsx'
 import { useToast } from '../features/schedule/hooks/useToast.js'
 
@@ -17,7 +18,7 @@ function LoginPage() {
     location.state?.oauthError ? '카카오 로그인에 실패했습니다. 다시 시도해주세요.' : '',
   )
   const [submitting, setSubmitting] = useState(false)
-  const [oauthStarting, setOauthStarting] = useState(false)
+  // const [oauthStarting, setOauthStarting] = useState(false)
   const { toast, show: showToast } = useToast(3000)
 
   useEffect(() => {
@@ -58,11 +59,11 @@ function LoginPage() {
     }
   }
 
-  const handleKakaoLogin = () => {
-    setError('')
-    setOauthStarting(true)
-    startKakaoLogin()
-  }
+  // const handleKakaoLogin = () => {
+  //   setError('')
+  //   setOauthStarting(true)
+  //   startKakaoLogin()
+  // }
 
   return (
     <AuthShell
@@ -112,6 +113,7 @@ function LoginPage() {
           {submitting ? '로그인 중...' : '로그인하고 계속하기'} <span aria-hidden="true">→</span>
         </button>
       </form>
+      {/*
       <div className="auth-divider" aria-hidden="true">
         <span>또는</span>
       </div>
@@ -124,6 +126,7 @@ function LoginPage() {
         {oauthStarting ? '카카오로 이동 중...' : '카카오로 계속하기'}
         <span aria-hidden="true">→</span>
       </button>
+      */}
       <p className="auth-switch">
         JustDO가 처음인가요? <Link to="/signup">계정 만들기</Link>
       </p>
