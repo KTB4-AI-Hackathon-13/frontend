@@ -9,7 +9,7 @@ const NAV = [
   { to: '/', label: '홈', end: true },
   { to: '/ai', label: 'AI 계획 만들기', disabled: true },
   { to: '/schedules', label: '내 계획' },
-  { to: '/puzzles', label: '내 퍼즐', disabled: true },
+  { to: '/puzzles', label: '내 퍼즐' },
   { to: '/gallery', label: '퍼즐 갤러리', disabled: true },
   { to: '/rankings', label: '랭킹', disabled: true },
   { to: '/settings', label: '설정', disabled: true },
