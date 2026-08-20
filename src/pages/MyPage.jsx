@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../features/auth/useAuth.js'
 import { changePassword, logout, updateCurrentUser, withdrawUser } from '../features/auth/authApi.js'
+import Toast from '../features/schedule/components/Toast.jsx'
+import { useToast } from '../features/schedule/hooks/useToast.js'
 
 const TIMEZONES = ['Asia/Seoul', 'Asia/Tokyo', 'UTC', 'America/New_York', 'Europe/London']
 
@@ -30,6 +32,7 @@ function MyPage() {
   const [profileStatus, setProfileStatus] = useState({})
   const [passwordStatus, setPasswordStatus] = useState({})
   const [withdrawStatus, setWithdrawStatus] = useState({})
+  const { toast, show: showToast } = useToast()
 
   const handleLogout = async () => {
     setBusy('logout'); setProfileStatus({})
@@ -63,11 +66,11 @@ function MyPage() {
     setBusy('password'); setPasswordStatus({})
     try {
       await changePassword(passwords)
-      clearUser()
-      navigate('/login', { replace: true, state: { passwordChanged: true } })
+      setPasswords({ currentPassword: '', newPassword: '', newPasswordConfirmation: '' })
+      showToast('비밀번호가 변경되었습니다.', 'success')
     } catch (error) {
-      setPasswordStatus({ type: 'error', message: error.message || '비밀번호를 변경하지 못했습니다.' }); setBusy('')
-    }
+      setPasswordStatus({ type: 'error', message: error.message || '비밀번호를 변경하지 못했습니다.' })
+    } finally { setBusy('') }
   }
 
   const handleWithdraw = async (event) => {
@@ -95,18 +98,23 @@ function MyPage() {
       </header>
 
       <form className="account-card" onSubmit={saveProfile}>
-        <div className="account-card__heading"><div><h2>기본 정보</h2><p>서비스에 표시되는 내 정보를 수정합니다.</p></div><span className="switch-user__avatar"><UserIcon /></span></div>
+        <div className="account-card__heading">
+          <div>
+            <h2>기본 정보</h2>
+            <p>서비스에 표시되는 내 정보를 수정합니다.</p>
+          </div>
+          {/* <span className="switch-user__avatar"><UserIcon /></span> */}
+        </div>
         <div className="account-grid">
           <label><span>이메일</span><input value={user?.email || ''} disabled /></label>
           <label><span>닉네임</span><input value={profile.nickname} maxLength="50" required onChange={(e) => setProfileDraft({ ...profile, nickname: e.target.value })} /></label>
-          <label className="account-grid__wide"><span>시간대</span><select value={profile.timezone} onChange={(e) => setProfileDraft({ ...profile, timezone: e.target.value })}>{TIMEZONES.map((timezone) => <option key={timezone}>{timezone}</option>)}</select></label>
         </div>
         <Status status={profileStatus} />
         <div className="account-card__actions"><button type="submit" disabled={busy === 'profile'}>{busy === 'profile' ? '저장 중...' : '변경사항 저장'}</button></div>
       </form>
 
       <form className="account-card" onSubmit={savePassword}>
-        <div className="account-card__heading"><div><h2>비밀번호 변경</h2><p>변경 후에는 모든 기기에서 다시 로그인해야 합니다.</p></div></div>
+        <div className="account-card__heading"><div><h2>비밀번호 변경</h2><p>현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.</p></div></div>
         <div className="account-grid">
           <label className="account-grid__wide"><span>현재 비밀번호</span><input type="password" autoComplete="current-password" required value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} /></label>
           <label><span>새 비밀번호</span><input type="password" autoComplete="new-password" required value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} /></label>
@@ -126,6 +134,7 @@ function MyPage() {
         <Status status={withdrawStatus} />
         <div className="account-card__actions"><button className="is-danger" type="submit" disabled={busy === 'withdraw'}>{busy === 'withdraw' ? '처리 중...' : '회원 탈퇴'}</button></div>
       </form>
+      <Toast toast={toast} />
     </section>
   )
 }
