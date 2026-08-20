@@ -59,6 +59,9 @@ function ScheduleModal({ schedule: s, onClose, onChanged }) {
           <Link to={`/?date=${s.startDate}`} className="link small" onClick={onClose}>
             캘린더에서 보기 →
           </Link>
+          <Link to={`/schedules/${s.id}/conversation`} className="link small" onClick={onClose}>
+            AI 대화 보기 →
+          </Link>
         </div>
 
         <section className="schedule-modal__edit-method" aria-labelledby="schedule-edit-method-title">

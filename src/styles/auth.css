@@ -127,7 +127,7 @@
   align-items: flex-start;
   margin-bottom: 34px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: -0.02em;
 }
 
 .auth-glass__heading strong {

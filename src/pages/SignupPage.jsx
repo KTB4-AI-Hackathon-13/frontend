@@ -51,23 +51,22 @@ function SignupPage() {
       eyebrow="START YOUR PLAN"
       title={
         <>
-          PLAN YOUR DAY.
+          EVERY DAY
           <br />
-          BUILD YOUR FUTURE.
+          BUILDS THE PICTURE.
         </>
       }
-      description="AI Planner와 함께 목표를 실천으로 바꾸는 첫 계정을 만드세요."
+      description="작은 실천을 모아 목표의 퍼즐을 완성하세요."
     >
       <div className="auth-glass__heading">
-        <span>CREATE ACCOUNT</span>
-        <strong>02</strong>
+        <span>계정 만들기</span>
       </div>
       <form className="auth-form auth-form--signup" onSubmit={handleSubmit} noValidate>
         <AuthField
           id="signup-email"
           label="이메일"
           type="email"
-          placeholder="you@example.com"
+          placeholder="사용할 이메일을 입력하세요"
           autoComplete="email"
           name="email"
           value={form.email}
@@ -77,7 +76,7 @@ function SignupPage() {
         <AuthField
           id="nickname"
           label="닉네임"
-          placeholder="나를 표현할 이름"
+          placeholder="서비스에서 사용할 이름"
           autoComplete="nickname"
           name="nickname"
           value={form.nickname}
@@ -89,7 +88,7 @@ function SignupPage() {
             id="signup-password"
             label="비밀번호"
             type="password"
-            placeholder="8자 이상"
+            placeholder="8~72자로 입력하세요"
             autoComplete="new-password"
             name="password"
             value={form.password}
@@ -110,7 +109,7 @@ function SignupPage() {
         </div>
         {serverError && <p className="auth-form__error" role="alert">{serverError}</p>}
         <button className="auth-submit" type="submit" disabled={submitting}>
-          {submitting ? '계정 만드는 중...' : '계정 만들기'} <span aria-hidden="true">→</span>
+          {submitting ? '계정 만드는 중...' : '계정 만들고 시작하기'} <span aria-hidden="true">→</span>
         </button>
       </form>
       <p className="auth-switch">
