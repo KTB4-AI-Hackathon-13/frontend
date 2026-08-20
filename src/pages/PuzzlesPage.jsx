@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 
-import { fetchMyPuzzles } from '../features/puzzle/api/puzzleApi.js'
+import { fetchMyPuzzles, fetchPublicPuzzles } from '../features/puzzle/api/puzzleApi.js'
 import PuzzleCard from '../features/puzzle/components/PuzzleCard.jsx'
 import PuzzleDetailModal from '../features/puzzle/components/PuzzleDetailModal.jsx'
 import { useCursorList } from '../features/schedule/hooks/useCursorList.js'
@@ -25,13 +25,22 @@ const FILTERS = [
 function PuzzlesPage() {
   const [status, setStatus] = useState('')
   const [open, setOpen] = useState(null) // 열려 있는 퍼즐 요약
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const userId = searchParams.get('userId')?.trim()
+  const isMyPuzzle = !userId
+  const pageSubject = location.state?.nickname || searchParams.get('nickname') || '해당 사용자'
+
   const fetchPage = useCallback(
-    (cursor) => fetchMyPuzzles({ status: status || undefined, size: PAGE_SIZE, cursor }),
-    [status],
+    (cursor) => {
+      if (userId) return fetchPublicPuzzles(userId, { size: PAGE_SIZE, cursor })
+      return fetchMyPuzzles({ status: status || undefined, size: PAGE_SIZE, cursor })
+    },
+    [status, userId],
   )
   const { items, hasNext, loading, loadingMore, error, loadMore, reload } = useCursorList(
     fetchPage,
-    [status],
+    [status, userId],
   )
   const sentinelRef = useInfiniteScroll(loadMore, { enabled: hasNext && !loading && !loadingMore })
 
@@ -39,28 +48,40 @@ function PuzzlesPage() {
     <section className="page">
       <header className="page-head">
         <div>
-          <h1 className="page-title">내 퍼즐</h1>
-          <p className="page-sub">할 일을 하나 끝낼 때마다 조각이 한 개씩 채워져요.</p>
+          <h1 className="page-title">{isMyPuzzle ? '내 퍼즐' : `${pageSubject}의 퍼즐`}</h1>
+          <p className="page-sub">
+            {isMyPuzzle
+              ? '할 일을 하나 끝낼 때마다 조각이 한 개씩 채워져요.'
+              : '공개된 퍼즐 모음입니다.'}
+          </p>
         </div>
-        <Link to="/schedules" className="btn">
-          내 계획 보기
-        </Link>
+        {isMyPuzzle ? (
+          <Link to="/schedules" className="btn">
+            내 계획 보기
+          </Link>
+        ) : (
+          <Link to="/rankings" className="btn">
+            랭킹 보러가기
+          </Link>
+        )}
       </header>
 
-      <div className="tabs" role="tablist">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            role="tab"
-            aria-selected={status === f.key}
-            className={`tab ${status === f.key ? 'is-active' : ''}`}
-            onClick={() => setStatus(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {isMyPuzzle && (
+        <div className="tabs" role="tablist">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              role="tab"
+              aria-selected={status === f.key}
+              className={`tab ${status === f.key ? 'is-active' : ''}`}
+              onClick={() => setStatus(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && error && items.length === 0 && <ErrorNotice error={error} onRetry={reload} />}
@@ -68,7 +89,9 @@ function PuzzlesPage() {
         <div className="empty">
           <p>아직 퍼즐이 없어요.</p>
           <p className="muted small">
-            계획의 할 일을 처음 완료하면 그 계획의 퍼즐이 만들어지고 첫 조각이 채워져요.
+            {isMyPuzzle
+              ? '계획의 할 일을 처음 완료하면 그 계획의 퍼즐이 만들어지고 첫 조각이 채워져요.'
+              : '공개된 퍼즐이 없거나 비공개 설정인 사용자일 수 있어요.'}
           </p>
           <Link to="/" className="btn">
             오늘 할 일 보러가기
