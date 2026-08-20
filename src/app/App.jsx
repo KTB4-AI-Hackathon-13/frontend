@@ -22,7 +22,7 @@ function App() {
         {/* 내 계획 목록 — 행 클릭 시 계획 모달(퍼즐 진행도·제목/기간 편집·삭제). 상세 페이지 없음 */}
         <Route path="/schedules" element={<SchedulesPage />} />
         <Route path="/rankings" element={<RankingsPage />} />
-        <Route path="/switch-user" element={<SwitchUserPage />} />
+        <Route path="/switch-user" element={<MyPage />} />
         <Route path="/schedules/:scheduleId" element={<Navigate to="/schedules" replace />} />
         {/* 08 내 퍼즐 — 카드 클릭 시 퍼즐 상세 모달 (7번 퍼즐 API) */}
         <Route path="/puzzles" element={<PuzzlesPage />} />
