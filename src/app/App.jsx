@@ -7,6 +7,7 @@ import RankingsPage from '../pages/RankingsPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
 import PuzzlesPage from '../pages/PuzzlesPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
+import OAuthCallbackPage from '../pages/OAuthCallbackPage.jsx'
 import SignupPage from '../pages/SignupPage.jsx'
 import MyPage from '../pages/MyPage.jsx'
 
@@ -15,6 +16,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
       <Route element={<AppLayout />}>
         {/* 07 메인 대시보드: 월간 캘린더 + 오늘 할 일 체크 · 할 일 수정/삭제는 모달 (5·6번) */}
         <Route path="/" element={<HomePage />} />
