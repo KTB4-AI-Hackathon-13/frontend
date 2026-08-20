@@ -1,80 +1,64 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
-import { logout } from '../../features/auth/authApi.js'
+import { useAuth } from '../../features/auth/useAuth.js'
 import { AUTH_EVENT_UNAUTHORIZED, authEvents } from '../../shared/api/client.js'
-
-/** 와이어프레임 공통 왼쪽 사이드바. 구현되지 않은 메뉴는 비활성 (다른 담당자 영역). */
-const NAV = [
-  { to: '/', label: '홈', end: true },
-  { to: '/ai', label: 'AI 계획 만들기', disabled: true },
-  { to: '/schedules', label: '내 계획' },
-  { to: '/puzzles', label: '내 퍼즐', disabled: true },
-  { to: '/gallery', label: '퍼즐 갤러리', disabled: true },
-  { to: '/rankings', label: '랭킹', disabled: true },
-  { to: '/settings', label: '설정', disabled: true },
-]
+import Sidebar from './Sidebar.jsx'
 
 function AppLayout() {
   const navigate = useNavigate()
-  const [loggingOut, setLoggingOut] = useState(false)
+  const { user, isLoadingUser, refreshUser, clearUser } = useAuth()
+  const initializedUserRef = useRef(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // 세션 없음/만료(401 AUTHENTICATION_REQUIRED)면 로그인 화면으로. client.js 인터셉터가 authEvents 로 알려준다.
   useEffect(() => {
-    const on = () => navigate('/login', { replace: true })
+    const on = () => {
+      clearUser()
+      navigate('/login', { replace: true })
+    }
     authEvents.addEventListener(AUTH_EVENT_UNAUTHORIZED, on)
     return () => authEvents.removeEventListener(AUTH_EVENT_UNAUTHORIZED, on)
-  }, [navigate])
+  }, [clearUser, navigate])
 
-  const handleLogout = async () => {
-    if (loggingOut) return
-    setLoggingOut(true)
-    try {
-      await logout()
-      navigate('/login', { replace: true })
-    } catch (error) {
-      window.alert(error.message || '로그아웃에 실패했습니다.')
-      setLoggingOut(false)
-    }
-  }
+  useEffect(() => {
+    if (initializedUserRef.current) return
+    initializedUserRef.current = true
+    refreshUser().catch(() => { })
+  }, [refreshUser, user])
 
   return (
     <div className="shell">
-      <aside className="sidebar">
-        <NavLink to="/" className="sidebar__brand">
-          AI Planner
-        </NavLink>
-        <nav className="sidebar__nav">
-          {NAV.map((n) =>
-            n.disabled ? (
-              <span key={n.to} className="sidebar__link is-disabled" title="준비 중">
-                {n.label}
-              </span>
-            ) : (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.end}
-                className={({ isActive }) => `sidebar__link ${isActive ? 'is-active' : ''}`}
-              >
-                {n.label}
-              </NavLink>
-            ),
-          )}
-        </nav>
+      <header className="app-header">
         <button
           type="button"
-          className="sidebar__logout"
-          onClick={handleLogout}
-          disabled={loggingOut}
+          className="app-header__menu"
+          aria-label={isSidebarOpen ? '사이드바 닫기' : '사이드바 열기'}
+          aria-expanded={isSidebarOpen}
+          aria-controls="app-sidebar"
+          onClick={() => setIsSidebarOpen((open) => !open)}
         >
-          <span aria-hidden="true">↗</span>
-          {loggingOut ? '로그아웃 중...' : '로그아웃'}
+          <span /><span /><span />
         </button>
-      </aside>
-      <main className="shell__main">
-        <Outlet />
-      </main>
+        <NavLink to="/" className="sidebar__brand" aria-label="AI Planner 홈">
+          <span className="sidebar__brand-mark" aria-hidden="true"><span /></span>
+          <span className="sidebar__brand-copy"><strong>AI Planner</strong><small>Plan your better day</small></span>
+        </NavLink>
+      </header>
+      <div className={`shell__body ${isSidebarOpen ? 'has-sidebar' : ''}`}>
+        <Sidebar isOpen={isSidebarOpen} user={user} isLoadingUser={isLoadingUser} />
+        {isSidebarOpen && (
+          <button
+            type="button"
+            className="sidebar-backdrop"
+            aria-label="사이드바 닫기"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        <main className="shell__main">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }
