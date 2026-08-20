@@ -52,13 +52,15 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
               onImageError={onImageError}
               onPieceHover={setHovered}
             />
-            <p className="pdetail__hint muted small">
-              {hovered
-                ? hovered.earned
-                  ? `“${hovered.scheduleItemTitle}” 완료로 ${(hovered.position ?? 0) + 1}번째 조각 획득 · ${formatDot((hovered.earnedAt ?? '').slice(0, 10))}`
-                  : `“${hovered.scheduleItemTitle}” (${formatDot(hovered.scheduledDate)}) — 완료하면 이 칸이 열려요`
-                : '조각에 마우스를 올리면 어떤 할 일로 얻은 조각인지 보여요.'}
-            </p>
+            {!complete && (
+              <p className="pdetail__hint muted small">
+                {hovered
+                  ? hovered.earned
+                    ? `“${hovered.scheduleItemTitle}” 완료로 ${(hovered.position ?? 0) + 1}번째 조각 획득 · ${formatDot((hovered.earnedAt ?? '').slice(0, 10))}`
+                    : `“${hovered.scheduleItemTitle}” (${formatDot(hovered.scheduledDate)}) — 완료하면 이 칸이 열려요`
+                  : '조각에 마우스를 올리면 어떤 할 일로 얻은 조각인지 보여요.'}
+              </p>
+            )}
           </div>
 
           <div className="pdetail__info">
