@@ -4,13 +4,187 @@
   overflow: hidden;
 }
 
+.template-form,
+.plan-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.template-form__field {
+  display: grid;
+  gap: 7px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.template-form input,
+.template-form select {
+  min-height: 42px;
+  padding: 8px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.template-form button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 700;
+}
+
+.template-form__checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-form__checkbox {
+  min-height: 38px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.template-form__checkbox:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.template-form__checkbox input {
+  min-height: auto;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.plan-card header,
+.plan-card__tasks li {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.plan-card header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.plan-card header span,
+.plan-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.plan-card__tasks {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
 .chat-page {
   height: 100%;
   min-width: 0;
   min-height: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   background: var(--surface);
+}
+
+.conversation-sidebar {
+  width: 240px;
+  flex: 0 0 240px;
+  min-height: 0;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+}
+
+.conversation-sidebar__head {
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.conversation-sidebar__new {
+  padding: 6px 8px;
+  color: var(--accent);
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.conversation-sidebar__new:hover {
+  background: var(--accent-soft);
+}
+
+.conversation-sidebar__list {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.conversation-sidebar__item {
+  min-width: 0;
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--muted);
+  border-radius: 9px;
+}
+
+.conversation-sidebar__item:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.conversation-sidebar__item.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.conversation-sidebar__item span {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-sidebar__item small,
+.conversation-sidebar__state {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.conversation-sidebar__state {
+  padding: 10px 7px;
 }
 
 .chat-header {
@@ -242,11 +416,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 15px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 8%);
+  box-shadow: 0 8px 28px rgb(46 54 128 / 10%);
 }
 .chat-composer:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 8px 32px rgb(0 0 0 / 10%);
+  box-shadow: 0 8px 32px var(--brand-glow);
 }
 .chat-composer textarea {
   width: 100%;
@@ -294,6 +468,28 @@
   color: var(--muted);
   font-size: 10px;
   text-align: center;
+}
+
+@media (max-width: 760px) {
+  .chat-page {
+    flex-direction: column;
+  }
+  .conversation-sidebar {
+    width: 100%;
+    flex: 0 0 auto;
+    padding: 9px 10px;
+    gap: 7px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .conversation-sidebar__list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .conversation-sidebar__item {
+    width: 150px;
+    flex: 0 0 150px;
+  }
 }
 
 @media (max-width: 640px) {

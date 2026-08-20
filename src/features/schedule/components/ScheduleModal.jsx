@@ -59,7 +59,39 @@ function ScheduleModal({ schedule: s, onClose, onChanged }) {
           <Link to={`/?date=${s.startDate}`} className="link small" onClick={onClose}>
             캘린더에서 보기 →
           </Link>
+          <Link to={`/schedules/${s.id}/conversation`} className="link small" onClick={onClose}>
+            AI 대화 보기 →
+          </Link>
         </div>
+
+        <section className="schedule-modal__edit-method" aria-labelledby="schedule-edit-method-title">
+          <div className="schedule-modal__edit-heading">
+            <strong id="schedule-edit-method-title">계획 수정 방법</strong>
+            <span className="muted small">직접 고치거나 AI와 대화하며 다시 계획할 수 있어요.</span>
+          </div>
+          <div className="schedule-modal__edit-options">
+            <div className="schedule-modal__edit-option is-active" aria-current="true">
+              <span className="schedule-modal__edit-icon" aria-hidden="true">✎</span>
+              <span>
+                <strong>직접 수정</strong>
+                <small>계획 이름과 기간을 바로 변경</small>
+              </span>
+            </div>
+            <Link
+              to={`/conversations?mode=revise&scheduleId=${s.id}`}
+              state={{ mode: 'revise', scheduleId: s.id, scheduleTitle: s.title }}
+              className="schedule-modal__edit-option"
+              onClick={onClose}
+            >
+              <span className="schedule-modal__edit-icon" aria-hidden="true">A</span>
+              <span>
+                <strong>AI로 계획 수정</strong>
+                <small>현재 계획을 바탕으로 AI와 재설계</small>
+              </span>
+              <span className="schedule-modal__edit-arrow" aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </section>
 
         <ScheduleEditForm
           schedule={s}

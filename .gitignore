@@ -53,3 +53,5 @@ desktop.ini
 
 # Local tooling
 .claude/settings.local.json
+
+docs/

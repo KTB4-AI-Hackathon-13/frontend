@@ -1,16 +1,25 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { fetchRankings, RANKING_PERIOD, RANKING_TYPE } from '../features/ranking/api/rankingApi.js'
+import { useAuth } from '../features/auth/useAuth.js'
+import {
+  fetchRankingCategories,
+  fetchRankings,
+  RANKING_PERIOD,
+  RANKING_TYPE,
+} from '../features/ranking/api/rankingApi.js'
 import { useAsync } from '../features/schedule/hooks/useAsync.js'
 import ErrorNotice from '../shared/components/ErrorNotice.jsx'
 
 const TYPE_OPTIONS = [
   { value: RANKING_TYPE.STREAK, label: '연속 실천', description: '계획을 실천한 날' },
   { value: RANKING_TYPE.COMPLETED_PUZZLES, label: '완성 퍼즐', description: '완성한 퍼즐' },
+  { value: RANKING_TYPE.PUZZLE_PIECES, label: '획득 조각', description: '최초 완료로 획득한 조각' },
 ]
 
 const PERIOD_OPTIONS = [
+  { value: RANKING_PERIOD.ALL, label: '전체' },
+  { value: RANKING_PERIOD.DAILY, label: '일간' },
   { value: RANKING_PERIOD.WEEKLY, label: '주간' },
   { value: RANKING_PERIOD.MONTHLY, label: '월간' },
   { value: RANKING_PERIOD.YEARLY, label: '연간' },
@@ -80,11 +89,18 @@ function RankingRows({ items, type }) {
 }
 
 function RankingsPage() {
+  const { user } = useAuth()
   const [type, setType] = useState(RANKING_TYPE.STREAK)
-  const [period, setPeriod] = useState(RANKING_PERIOD.WEEKLY)
-  const rankings = useAsync(() => fetchRankings({ type, period }), [type, period], {
-    keepData: false,
-  })
+  const [period, setPeriod] = useState(RANKING_PERIOD.ALL)
+  const [categoryId, setCategoryId] = useState('')
+  const categories = useAsync(fetchRankingCategories, [], { keepData: true })
+  const rankings = useAsync(
+    () => fetchRankings({ type, period, categoryId: categoryId || undefined }),
+    [type, period, categoryId],
+    {
+      keepData: false,
+    },
+  )
 
   const data = rankings.data
   const selectedType = TYPE_OPTIONS.find((option) => option.value === type)
@@ -114,18 +130,34 @@ function RankingsPage() {
             </button>
           ))}
         </div>
-        <div className="ranking__period" role="group" aria-label="집계 기간">
-          {PERIOD_OPTIONS.map((option) => (
-            <button
-              type="button"
-              className={period === option.value ? 'is-active' : ''}
-              onClick={() => setPeriod(option.value)}
-              aria-pressed={period === option.value}
-              key={option.value}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="ranking__scope">
+          <select
+            className="select select--inline"
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            aria-label="랭킹 카테고리"
+            disabled={categories.loading}
+          >
+            <option value="">전체 카테고리</option>
+            {(categories.data ?? []).map((category) => (
+              <option value={String(category.id)} key={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <div className="ranking__period" role="group" aria-label="집계 기간">
+            {PERIOD_OPTIONS.map((option) => (
+              <button
+                type="button"
+                className={period === option.value ? 'is-active' : ''}
+                onClick={() => setPeriod(option.value)}
+                aria-pressed={period === option.value}
+                key={option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -142,7 +174,11 @@ function RankingsPage() {
       {!rankings.loading && !rankings.error && data && (
         <>
           {data.myRanking && (
-            <section className={`ranking__mine tier--${data.myRanking.tier.toLowerCase()}`}>
+            <Link
+              to="/puzzles"
+              className={`ranking__mine tier--${data.myRanking.tier.toLowerCase()}`}
+              aria-label="내 퍼즐 보기"
+            >
               <div>
                 <span>나의 {selectedType.label} 랭킹</span>
                 <strong>{number.format(data.myRanking.rank)}위</strong>
@@ -151,7 +187,7 @@ function RankingsPage() {
                 <span>{TIER_LABEL[data.myRanking.tier]}</span>
                 <strong>{formatScore(data.myRanking.score, type)}</strong>
               </div>
-            </section>
+            </Link>
           )}
 
           {data.items.length > 0 ? (
@@ -168,7 +204,7 @@ function RankingsPage() {
                 <span>사용자</span>
                 <span>기록</span>
               </div>
-              <RankingRows items={data.items} type={type} />
+              <RankingRows items={data.items} type={type} currentUserId={user?.id} />
             </section>
           ) : (
             <div className="empty ranking__empty">
