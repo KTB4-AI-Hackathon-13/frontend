@@ -44,7 +44,7 @@ function PuzzleDetailModal({
         imageUrl: puzzle.imageUrl ?? summaryImageUrl,
       }
     : null
-  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError } =
+  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError, retryImage } =
     usePuzzleImage(imagePuzzle)
   const complete = puzzle?.status === 'COMPLETED'
   const pct = puzzle?.pieceCount
@@ -126,6 +126,11 @@ function PuzzleDetailModal({
                   ? ' 그림을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.'
                   : ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.')}
             </p>
+            {imageFailed && (
+              <button type="button" className="btn btn--sm" onClick={retryImage}>
+                이미지 다시 불러오기
+              </button>
+            )}
           </div>
         </div>
       )}
