@@ -55,10 +55,7 @@ function RankBadge({ rank }) {
   )
 }
 
-/**
- * 순위 행 — 타인의 퍼즐은 열지 않는다.
- * 내 행만 내 퍼즐로 가는 링크이고, 나머지는 목록으로만 보여준다.
- */
+/** 순위 행 — 본인은 내 퍼즐, 타인은 해당 사용자의 공개 퍼즐로 이동한다. */
 function RankingRows({ items, type, currentUserId }) {
   const isMe = (item) => currentUserId != null && String(item.userId) === String(currentUserId)
 
@@ -82,13 +79,14 @@ function RankingRows({ items, type, currentUserId }) {
 
         return (
           <li className={`ranking__row ${item.rank <= 3 ? 'is-podium' : ''}`} key={item.userId}>
-            {isMe(item) ? (
-              <Link to="/puzzles" className="ranking__row-link" aria-label="내 퍼즐 보기">
-                {body}
-              </Link>
-            ) : (
-              <div className="ranking__row-link is-static">{body}</div>
-            )}
+            <Link
+              to={isMe(item) ? '/puzzles' : `/puzzles?userId=${encodeURIComponent(item.userId)}`}
+              state={isMe(item) ? undefined : { nickname: item.nickname }}
+              className="ranking__row-link"
+              aria-label={isMe(item) ? '내 퍼즐 보기' : `${item.nickname}의 공개 퍼즐 보기`}
+            >
+              {body}
+            </Link>
           </li>
         )
       })}
