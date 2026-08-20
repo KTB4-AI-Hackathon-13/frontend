@@ -1,10 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
-import {
-  fetchRankings,
-  RANKING_PERIOD,
-  RANKING_TYPE,
-} from '../features/ranking/api/rankingApi.js'
+import { fetchRankings, RANKING_PERIOD, RANKING_TYPE } from '../features/ranking/api/rankingApi.js'
 import { useAsync } from '../features/schedule/hooks/useAsync.js'
 import ErrorNotice from '../shared/components/ErrorNotice.jsx'
 
@@ -50,20 +47,32 @@ function RankBadge({ rank }) {
 }
 
 function RankingRows({ items, type }) {
+  const toPuzzleBy = (item) => ({
+    pathname: '/puzzles',
+    search: `userId=${encodeURIComponent(String(item.userId))}&nickname=${encodeURIComponent(item.nickname || '')}`,
+    state: { userId: item.userId, nickname: item.nickname },
+  })
+
   return (
     <ol className="ranking__list">
       {items.map((item) => (
         <li className={`ranking__row ${item.rank <= 3 ? 'is-podium' : ''}`} key={item.userId}>
-          <div className="ranking__position">
-            <RankBadge rank={item.rank} />
-          </div>
-          <div className="ranking__person">
-            <span className="ranking__avatar" aria-hidden="true">
-              {item.nickname?.slice(0, 1) || '?'}
-            </span>
-            <strong>{item.nickname}</strong>
-          </div>
-          <strong className="ranking__score">{formatScore(item.score, type)}</strong>
+          <Link
+            to={toPuzzleBy(item)}
+            className="ranking__row-link"
+            aria-label={`${item.nickname} 퍼즐 보기`}
+          >
+            <div className="ranking__position">
+              <RankBadge rank={item.rank} />
+            </div>
+            <div className="ranking__person">
+              <span className="ranking__avatar" aria-hidden="true">
+                {item.nickname?.slice(0, 1) || '?'}
+              </span>
+              <strong>{item.nickname}</strong>
+            </div>
+            <strong className="ranking__score">{formatScore(item.score, type)}</strong>
+          </Link>
         </li>
       ))}
     </ol>
