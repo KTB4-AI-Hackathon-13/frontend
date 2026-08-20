@@ -865,6 +865,12 @@ button {
   flex-wrap: wrap;
 }
 
+.page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .empty {
   padding: 36px 20px;
   text-align: center;
