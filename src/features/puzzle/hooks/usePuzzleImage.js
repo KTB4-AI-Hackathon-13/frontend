@@ -12,10 +12,12 @@ const REFRESH_MARGIN_MS = 45_000
  * - `imageId` 가 없거나(서버가 아직 퍼즐에 이미지를 배정하지 않음) 조회에 실패하면 `imageUrl` 은 null 이다.
  *   그때 퍼즐판은 그림 없이 조각 틀만 그린다 (진행도는 그대로 보인다).
  * - `onImageError` 를 이미지 태그에 물려두면, URL 이 예상보다 일찍 죽었을 때 캐시를 버리고 한 번 재발급한다
+ * - `enabled: false` 면 요청 자체를 미룬다 (예: 카드가 아직 화면에 안 보일 때 — `useInView` 와 함께 쓴다)
  *
  * @param {{ id: number, imageId?: number | null } | null | undefined} puzzle
+ * @param {{ enabled?: boolean }} [opts]
  */
-export function usePuzzleImage(puzzle) {
+export function usePuzzleImage(puzzle, { enabled = true } = {}) {
   const imageId = puzzle?.imageId ?? null
   // { imageId, url } 로 들고 있어 퍼즐이 바뀌면 이전 URL 이 자동으로 무효가 된다
   const [signed, setSigned] = useState(null)
@@ -25,7 +27,7 @@ export function usePuzzleImage(puzzle) {
   const retriedFor = useRef(null)
 
   useEffect(() => {
-    if (!imageId) return undefined
+    if (!imageId || !enabled) return undefined
     let cancelled = false
     let timer = null
     getImageUrl(imageId).then(
@@ -49,7 +51,7 @@ export function usePuzzleImage(puzzle) {
       cancelled = true
       if (timer) clearTimeout(timer)
     }
-  }, [imageId, reloadTick])
+  }, [imageId, enabled, reloadTick])
 
   /** <image> 로드 실패 시: 만료된 URL 로 보고 한 번만 재발급 */
   const onImageError = useCallback(() => {
@@ -64,6 +66,8 @@ export function usePuzzleImage(puzzle) {
     imageUrl,
     /** 서버에 아직 이미지가 배정되지 않았거나 불러오지 못한 상태 */
     hasImage: Boolean(imageUrl),
+    /** 서명 URL 을 받아오는 중 (스켈레톤 UI 표시용) */
+    imageLoading: Boolean(imageId) && enabled && !imageUrl && !failed,
     imageFailed: failed,
     onImageError,
   }

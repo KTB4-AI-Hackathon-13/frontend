@@ -5,12 +5,13 @@ import { AUTH_EVENT_UNAUTHORIZED, authEvents } from '../../shared/api/client.js'
 
 /** 와이어프레임 공통 왼쪽 사이드바. 구현되지 않은 메뉴는 비활성 (다른 담당자 영역). */
 const NAV = [
-  { to: '/', label: '홈', icon: 'calendar', end: true },
-  { to: '/ai', label: 'AI 계획 만들기', icon: 'spark', disabled: true },
-  { to: '/schedules', label: '내 계획', icon: 'list' },
-  { to: '/puzzles', label: '내 퍼즐', icon: 'puzzle', disabled: true },
-  { to: '/gallery', label: '퍼즐 갤러리', icon: 'gallery', disabled: true },
-  { to: '/rankings', label: '랭킹', icon: 'ranking' },
+  { to: '/', label: '홈', end: true },
+  { to: '/ai', label: 'AI 계획 만들기' },
+  { to: '/schedules', label: '내 계획' },
+  { to: '/puzzles', label: '내 퍼즐'},
+  { to: '/gallery', label: '퍼즐 갤러리' },
+  { to: '/rankings', label: '랭킹' },
+  { to: '/settings', label: '설정'},
 ]
 
 function NavIcon({ name }) {
