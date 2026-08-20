@@ -20,6 +20,7 @@
  * @property {ScheduleStatus} status
  * @property {string} startDate                YYYY-MM-DD
  * @property {string} endDate                  YYYY-MM-DD
+ * @property {number | null} categoryId        계획 전체를 대표하는 카테고리
  * @property {number} currentVersion
  * @property {number} puzzleCount              퍼즐 조각 수 = 유효한 작업 수 (삭제·CANCELLED 제외)
  * @property {number} completedPuzzleCount     그중 COMPLETED
@@ -27,14 +28,13 @@
  * @typedef {Object} ScheduleItem
  * @property {number} id
  * @property {number | null} scheduleId          null이면 계획에 속하지 않은 단독 작업
- * @property {number | null} categoryId
  * @property {number | null} parentItemId
  * @property {string} title
  * @property {string | null} description
  * @property {string} scheduledDate            YYYY-MM-DD
  * @property {number} estimatedMinutes         생성 요청에서 필수(1 이상)
+ * @property {'STUDY' | 'PRACTICE' | 'REVIEW' | 'EXERCISE' | 'REST' | 'ETC'} itemType
  * @property {number} position                 같은 날짜 안 표시 순서 (0부터) — 서버 정렬 그대로 사용
- * @property {number | null} workload          선택 상대적 업무량
  * @property {number} priority                 1(높음) ~ 5(낮음), 기본 3
  * @property {ItemStatus} status
  * @property {string | null} completedAt       ISO 8601
@@ -51,12 +51,12 @@
  * @property {number} id
  * @property {number | null} scheduleId
  * @property {string | null} scheduleTitle
- * @property {number | null} categoryId
  * @property {string} title
+ * @property {string | null} description
  * @property {string} scheduledDate            일별 응답의 상위 date를 API 어댑터가 주입
  * @property {number} estimatedMinutes
+ * @property {'STUDY' | 'PRACTICE' | 'REVIEW' | 'EXERCISE' | 'REST' | 'ETC'} itemType
  * @property {number} position
- * @property {number | null} workload
  * @property {number} priority
  * @property {ItemStatus} status
  * @property {string | null} completedAt

@@ -11,11 +11,14 @@ export const ITEM_STATUS = {
   SKIPPED: 'SKIPPED',
   CANCELLED: 'CANCELLED',
 }
-/** 계획에 속하지 않은 개인 일정은 세부 분류를 입력받지 않고 이 값으로 저장한다. */
-export const STANDALONE_ITEM_DEFAULTS = Object.freeze({
-  categoryId: null,
-  workload: null,
-})
+export const ITEM_TYPE = {
+  STUDY: 'STUDY',
+  PRACTICE: 'PRACTICE',
+  REVIEW: 'REVIEW',
+  EXERCISE: 'EXERCISE',
+  REST: 'REST',
+  ETC: 'ETC',
+}
 
 export const SCHEDULE_STATUS_LABEL = {
   DRAFT: '검토 중',
@@ -37,16 +40,19 @@ export const ITEM_PRIORITY_LABEL = {
   4: '낮음',
   5: '매우 낮음',
 }
-
-/** 현재 DB categories 중 활성 항목. 카테고리 목록 API가 생기면 서버 조회로 교체한다. */
-export const ITEM_CATEGORY_OPTIONS = [
-  { id: 3, label: '학습' },
-  { id: 4, label: '운동' },
-  { id: 5, label: '프로젝트' },
-]
-
-export const categoryLabelFor = (categoryId) =>
-  ITEM_CATEGORY_OPTIONS.find((category) => category.id === Number(categoryId))?.label ?? null
+export const ITEM_TYPE_LABEL = {
+  STUDY: '학습',
+  PRACTICE: '실습',
+  REVIEW: '복습',
+  EXERCISE: '운동',
+  REST: '휴식',
+  ETC: '기타',
+}
+export const ITEM_TYPE_OPTIONS = Object.entries(ITEM_TYPE_LABEL).map(([value, label]) => ({
+  value,
+  label,
+}))
+export const itemTypeLabelFor = (itemType) => ITEM_TYPE_LABEL[itemType] ?? itemType ?? null
 
 /** 계획별 색상 (와이어프레임: 계획별 색상, 완료 항목은 흐리게) */
 export const SCHEDULE_COLORS = ['#5b6cff', '#2fb38a', '#f2a33c', '#e06aa6', '#4db2e0', '#9b6cf2']

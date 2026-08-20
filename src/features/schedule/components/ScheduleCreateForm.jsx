@@ -4,13 +4,20 @@ import { ApiError, userMessage } from '../../../shared/api/apiError.js'
 import { todayLocal } from '../utils/date.js'
 
 /** 사용자가 직접 계획을 만드는 폼 — POST /schedules. */
-function ScheduleCreateForm({ onSubmit, onCancel, serverError, submitting = false }) {
+function ScheduleCreateForm({
+  categories = [],
+  onSubmit,
+  onCancel,
+  serverError,
+  submitting = false,
+}) {
   const today = todayLocal()
   const [form, setForm] = useState({
     title: '',
     description: '',
     startDate: today,
     endDate: today,
+    categoryId: '',
   })
   const [error, setError] = useState(null)
   const update = (key) => (e) => setForm((current) => ({ ...current, [key]: e.target.value }))
@@ -29,6 +36,7 @@ function ScheduleCreateForm({ onSubmit, onCancel, serverError, submitting = fals
       description: form.description.trim() || null,
       startDate: form.startDate,
       endDate: form.endDate,
+      categoryId: form.categoryId === '' ? undefined : Number(form.categoryId),
     })
   }
 
@@ -45,6 +53,18 @@ function ScheduleCreateForm({ onSubmit, onCancel, serverError, submitting = fals
           autoFocus
         />
         {fieldErrors.title && <span className="field__error">{fieldErrors.title}</span>}
+      </label>
+      <label className="field">
+        <span className="field__label">카테고리 (선택)</span>
+        <select className="select" value={form.categoryId} onChange={update('categoryId')}>
+          <option value="">미분류</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+        {fieldErrors.categoryId && <span className="field__error">{fieldErrors.categoryId}</span>}
       </label>
       <div className="field-row">
         <label className="field">

@@ -2,17 +2,12 @@ import { useState } from 'react'
 
 import { ApiError, userMessage } from '../../../shared/api/apiError.js'
 import { isWithin } from '../utils/date.js'
-import {
-  ITEM_CATEGORY_OPTIONS,
-  STANDALONE_ITEM_DEFAULTS,
-  categoryLabelFor,
-} from '../utils/constants.js'
+import { ITEM_TYPE, ITEM_TYPE_OPTIONS } from '../utils/constants.js'
 
 /**
  * 할 일 추가/수정 폼 (시간 없이 날짜 단위).
  * - 추가: 계획을 고르면 POST /schedules/{scheduleId}/items, 고르지 않으면 POST /schedule-items.
- * - 생성 계약: title, scheduledDate, estimatedMinutes 는 필수다.
- * - 개인 일정: categoryId/workload 는 null로 고정하고 입력받지 않는다.
+ * - 생성 계약: title, scheduledDate, estimatedMinutes, itemType 은 필수다.
  * - 수정: PATCH /schedule-items/{itemId} — 바뀐 필드만 전송. status 는 별도 API로 변경한다.
  *
  * props
@@ -38,9 +33,8 @@ function ScheduleItemForm({
     title: initial?.title ?? '',
     scheduledDate: initial?.scheduledDate ?? defaultDate ?? '',
     description: initial?.description ?? '',
-    categoryId: initial?.categoryId ?? '',
-    workload: initial?.workload ?? '',
     estimatedMinutes: initial?.estimatedMinutes ?? 30,
+    itemType: initial?.itemType ?? ITEM_TYPE.ETC,
     priority: initial?.priority ?? 3,
     position: initial?.position ?? '',
   })
@@ -56,44 +50,24 @@ function ScheduleItemForm({
     event.preventDefault()
     const title = form.title.trim()
     const scheduleId = isStandalone ? null : Number(form.scheduleId)
-    const categoryId = isStandalone
-      ? STANDALONE_ITEM_DEFAULTS.categoryId
-      : form.categoryId === ''
-        ? undefined
-        : Number(form.categoryId)
-    const workload = isStandalone
-      ? STANDALONE_ITEM_DEFAULTS.workload
-      : form.workload === ''
-        ? undefined
-        : Number(form.workload)
     const estimatedMinutes = Number(form.estimatedMinutes)
     const priority = Number(form.priority)
     const position = form.position === '' ? undefined : Number(form.position)
 
     if (!title) return setError('할 일 제목을 입력하세요.')
-    if (title.length > 200) return setError('제목은 200자 이하여야 합니다.')
+    if (title.length > 100) return setError('제목은 100자 이하여야 합니다.')
+    if (form.description.length > 1000) return setError('메모는 1000자 이하여야 합니다.')
     if (!form.scheduledDate) return setError('날짜를 선택하세요.')
     if (schedule && !isWithin(form.scheduledDate, schedule.startDate, schedule.endDate)) {
       return setError(
         `날짜는 계획 기간(${schedule.startDate} ~ ${schedule.endDate}) 안이어야 합니다.`,
       )
     }
-    if (
-      !isStandalone &&
-      categoryId !== undefined &&
-      !ITEM_CATEGORY_OPTIONS.some((category) => category.id === categoryId)
-    ) {
-      return setError('사용 가능한 카테고리를 선택하세요.')
+    if (!ITEM_TYPE_OPTIONS.some((option) => option.value === form.itemType)) {
+      return setError('사용 가능한 작업 유형을 선택하세요.')
     }
-    if (
-      workload !== undefined &&
-      workload !== null &&
-      (!Number.isInteger(workload) || workload < 1)
-    ) {
-      return setError('작업량은 비워두거나 1 이상의 정수로 입력하세요.')
-    }
-    if (!Number.isInteger(estimatedMinutes) || estimatedMinutes < 1) {
-      return setError('예상 소요 시간은 1분 이상의 정수로 입력하세요.')
+    if (!Number.isInteger(estimatedMinutes) || estimatedMinutes < 1 || estimatedMinutes > 1440) {
+      return setError('예상 소요 시간은 1~1440분 사이의 정수로 입력하세요.')
     }
     if (!Number.isInteger(priority) || priority < 1 || priority > 5) {
       return setError('우선순위는 1~5입니다.')
@@ -107,30 +81,22 @@ function ScheduleItemForm({
       title,
       scheduledDate: form.scheduledDate,
       description: form.description.trim(),
-      categoryId,
-      workload,
       estimatedMinutes,
+      itemType: form.itemType,
       priority,
       position,
     }
     if (!isEdit) return onSubmit({ scheduleId, body: full })
 
-    // PATCH 는 보낸 값만 변경한다. 백엔드가 null을 "변경 없음"으로 처리하는 선택 필드는
-    // 빈 값으로 지우려 하지 않고 실제 숫자가 입력됐을 때만 전송한다.
+    // PATCH 는 보낸 값만 변경한다.
     const patch = {}
     if (full.title !== initial.title) patch.title = full.title
     if (full.scheduledDate !== initial.scheduledDate) patch.scheduledDate = full.scheduledDate
     if (full.description !== (initial.description ?? '')) patch.description = full.description
-    if (
-      !isStandalone &&
-      full.workload !== undefined &&
-      full.workload !== initial.workload
-    ) {
-      patch.workload = full.workload
-    }
     if (full.estimatedMinutes !== initial.estimatedMinutes) {
       patch.estimatedMinutes = full.estimatedMinutes
     }
+    if (full.itemType !== initial.itemType) patch.itemType = full.itemType
     if (full.priority !== initial.priority) patch.priority = full.priority
     if (full.position !== undefined && full.position !== initial.position) {
       patch.position = full.position
@@ -164,7 +130,7 @@ function ScheduleItemForm({
           className="input"
           value={form.title}
           onChange={update('title')}
-          maxLength={200}
+          maxLength={100}
           placeholder="예: 교재 1장 읽기"
           autoFocus
         />
@@ -194,57 +160,25 @@ function ScheduleItemForm({
         )}
       </label>
 
-      {isStandalone ? (
-        <div className="field">
-          <span className="field__label">개인 일정 기본값</span>
-          <span className="field__hint">
-            카테고리와 작업량은 입력하지 않고 기본값(null)으로 저장됩니다.
-          </span>
-        </div>
-      ) : isEdit ? (
-        <div className="field">
-          <span className="field__label">카테고리</span>
-          <span className="field__readonly">
-            {categoryLabelFor(initial?.categoryId) ?? '카테고리 없음'}
-          </span>
-        </div>
-      ) : (
+      <div className="field-row">
         <label className="field">
-          <span className="field__label">카테고리 (선택)</span>
-          <select className="select" value={form.categoryId} onChange={update('categoryId')}>
-            <option value="">카테고리 없음</option>
-            {ITEM_CATEGORY_OPTIONS.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label}
+          <span className="field__label">작업 유형</span>
+          <select className="select" value={form.itemType} onChange={update('itemType')}>
+            {ITEM_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
-          {fieldErrors.categoryId && <span className="field__error">{fieldErrors.categoryId}</span>}
+          {fieldErrors.itemType && <span className="field__error">{fieldErrors.itemType}</span>}
         </label>
-      )}
-
-      <div className="field-row">
-        {!isStandalone && (
-          <label className="field">
-            <span className="field__label">작업량 (선택)</span>
-            <input
-              type="number"
-              className="input"
-              min={1}
-              step={1}
-              value={form.workload}
-              placeholder="미지정"
-              onChange={update('workload')}
-            />
-            {fieldErrors.workload && <span className="field__error">{fieldErrors.workload}</span>}
-          </label>
-        )}
         <label className="field">
           <span className="field__label">예상 소요 시간 (분)</span>
           <input
             type="number"
             className="input"
             min={1}
+            max={1440}
             step={1}
             value={form.estimatedMinutes}
             onChange={update('estimatedMinutes')}
@@ -287,7 +221,7 @@ function ScheduleItemForm({
         <textarea
           className="input"
           rows={2}
-          maxLength={5000}
+          maxLength={1000}
           value={form.description}
           onChange={update('description')}
         />

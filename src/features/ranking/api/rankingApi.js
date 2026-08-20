@@ -1,4 +1,5 @@
 import client from '../../../shared/api/client.js'
+import { fetchCategories } from '../../../shared/api/categoryApi.js'
 
 export const RANKING_TYPE = {
   STREAK: 'STREAK',
@@ -23,5 +24,5 @@ export function fetchRankings({ type, period = RANKING_PERIOD.ALL, categoryId, s
 
 /** 랭킹 범위 필터용 활성 카테고리. */
 export function fetchRankingCategories() {
-  return client.get('/categories')
+  return fetchCategories()
 }
