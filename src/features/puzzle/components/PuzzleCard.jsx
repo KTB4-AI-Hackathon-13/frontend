@@ -74,9 +74,7 @@ function PuzzleCard({ puzzle, onOpen }) {
           <span className="muted small">
             {complete && puzzle.completedAt
               ? `${formatDot(puzzle.completedAt.slice(0, 10))} 완성`
-              : puzzle.visibility === 'PUBLIC'
-                ? '공개'
-                : '비공개'}
+              : '조각 모으는 중'}
           </span>
         </div>
         <div className="bar">
