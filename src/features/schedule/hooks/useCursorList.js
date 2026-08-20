@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { isInvalidCursor } from '../../../shared/api/apiError.js'
 
@@ -7,6 +7,7 @@ import { isInvalidCursor } from '../../../shared/api/apiError.js'
  * - fetchPage(cursor) 는 `{ items, nextCursor, hasNext }` 를 돌려주는 함수
  * - deps 가 바뀌면(예: status 탭) 첫 페이지부터 다시 로드
  * - loadMore(): nextCursor 로 다음 페이지를 이어 붙임 (hasNext=false 면 no-op)
+ * - reload(): 첫 페이지 재조회가 끝날 때 resolve 되는 Promise 를 반환한다.
  * - INVALID_CURSOR(400) 이면 첫 페이지부터 자동 재시작 (문서: "첫 페이지부터 다시")
  *
  * 구현 메모: loading/loadingMore 는 "요청 키"와 "완료된 키"를 비교해 파생한다 (effect 안 동기 setState 없음).
@@ -17,6 +18,7 @@ import { isInvalidCursor } from '../../../shared/api/apiError.js'
  */
 export function useCursorList(fetchPage, deps) {
   const [resetTick, setResetTick] = useState(0)
+  const reloadResolvers = useRef([])
   const genKey = JSON.stringify([...deps, resetTick]) // "세대" — 바뀌면 목록 초기화
   const [moreReq, setMoreReq] = useState(null) // { genKey, cursor } 추가 페이지 요청
   const [acc, setAcc] = useState({
@@ -31,6 +33,11 @@ export function useCursorList(fetchPage, deps) {
   // 1) 첫 페이지 — 세대가 바뀔 때마다
   useEffect(() => {
     let cancelled = false
+    const settleReloads = () => {
+      const resolvers = reloadResolvers.current
+      reloadResolvers.current = []
+      resolvers.forEach((resolve) => resolve())
+    }
     fetchPage(null).then(
       (page) => {
         if (cancelled) return
@@ -42,10 +49,12 @@ export function useCursorList(fetchPage, deps) {
           error: null,
           doneCursor: null,
         })
+        settleReloads()
       },
       (error) => {
         if (cancelled) return
         setAcc({ genKey, items: [], nextCursor: null, hasNext: false, error, doneCursor: null })
+        settleReloads()
       },
     )
     return () => {
@@ -101,7 +110,14 @@ export function useCursorList(fetchPage, deps) {
     setMoreReq({ genKey, cursor: acc.nextCursor })
   }, [loading, loadingMore, acc.hasNext, acc.nextCursor, genKey])
 
-  const reload = useCallback(() => setResetTick((t) => t + 1), [])
+  const reload = useCallback(
+    () =>
+      new Promise((resolve) => {
+        reloadResolvers.current.push(resolve)
+        setResetTick((t) => t + 1)
+      }),
+    [],
+  )
 
   return {
     items: acc.items,
