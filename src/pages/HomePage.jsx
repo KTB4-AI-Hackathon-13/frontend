@@ -35,7 +35,9 @@ const SWIPE_COOLDOWN_MS = 650
 
 /**
  * 메인 대시보드 (와이어프레임 07) — 할 일과 관련된 모든 조작은 이 화면 + 모달에서 끝난다.
- * - 왼쪽 월간 캘린더 : GET /calendar?year&month (월 이동 때마다). 칩 클릭 → 그 날짜 선택 + 할 일 모달
+ * - 왼쪽 월간 캘린더 : GET /calendar?year&month 의 할 일과 GET /schedules 의 계획 기간을 함께 표시한다.
+ *                      할 일이 없는 계획도 startDate~endDate 기간 막대로 보인다.
+ *                      칩 클릭 → 해당 날짜 선택
  * - 오른쪽 할 일 패널 : GET /schedule-items/today (서버 기준 오늘, Asia/Seoul). 다른 날짜 클릭 시 캘린더 응답의 그 날짜
  *                      패널은 "나열 + 완료 체크"만, 행 클릭 → 할 일 모달(수정·상태·삭제)
  * - 체크박스         : PATCH /schedule-items/{id}/status (낙관적 업데이트 → 성공 시 캘린더+오늘 재조회)
@@ -287,6 +289,7 @@ function HomePage() {
             year={year}
             month={month}
             days={cal?.days}
+            schedules={schedules.data?.items}
             today={today}
             selectedDate={selectedDate}
             onSelectDate={nav.selectDate}

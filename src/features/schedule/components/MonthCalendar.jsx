@@ -1,5 +1,6 @@
 import {
   ITEM_STATUS,
+  SCHEDULE_STATUS,
   STANDALONE_ITEM_LABEL,
   categoryLabelFor,
   colorForSchedule,
@@ -19,44 +20,75 @@ const itemTooltip = (item) =>
     .filter(Boolean)
     .join(' · ')
 
-const groupBySchedule = (items = []) =>
-  Array.from(
-    orderScheduleItems(items)
-      .reduce((groups, item) => {
-        const key = item.scheduleId == null ? `standalone-${item.id}` : `schedule-${item.scheduleId}`
-        const group = groups.get(key) ?? {
-          key,
-          scheduleId: item.scheduleId,
-          title: item.scheduleTitle ?? STANDALONE_ITEM_LABEL,
-          items: [],
-        }
-        group.items.push(item)
-        groups.set(key, group)
-        return groups
-      }, new Map())
-      .values(),
-  )
+const isWithinSchedulePeriod = (date, schedule) =>
+  schedule.startDate <= date && date <= schedule.endDate
+
+const groupBySchedule = (items = [], schedules = [], date) => {
+  const groups = orderScheduleItems(items).reduce((result, item) => {
+    const key = item.scheduleId == null ? `standalone-${item.id}` : `schedule-${item.scheduleId}`
+    const group = result.get(key) ?? {
+      key,
+      scheduleId: item.scheduleId,
+      title: item.scheduleTitle ?? STANDALONE_ITEM_LABEL,
+      status: null,
+      items: [],
+    }
+    group.items.push(item)
+    result.set(key, group)
+    return result
+  }, new Map())
+
+  schedules.forEach((schedule) => {
+    if (!isWithinSchedulePeriod(date, schedule)) return
+    const key = `schedule-${schedule.id}`
+    const group = groups.get(key) ?? {
+      key,
+      scheduleId: schedule.id,
+      title: schedule.title,
+      items: [],
+    }
+    group.title = schedule.title
+    group.status = schedule.status
+    groups.set(key, group)
+  })
+
+  return Array.from(groups.values())
+}
 
 const isCompletedGroup = (group) =>
-  group.items.every((item) => item.status === ITEM_STATUS.COMPLETED)
+  group.items.length > 0
+    ? group.items.every((item) => item.status === ITEM_STATUS.COMPLETED)
+    : group.status === SCHEDULE_STATUS.COMPLETED
 
 const isMutedGroup = (group) =>
+  group.items.length > 0 &&
   group.items.every(
     (item) => item.status === ITEM_STATUS.SKIPPED || item.status === ITEM_STATUS.CANCELLED,
   )
 
 /**
  * 와이어프레임 07 — 월간 캘린더 (월요일 시작).
- * - 날짜 칸에 그 날 할 일을 전부 표시하고, 칸 높이는 행 수만큼 자란다 (잘라내기 없음)
- * - 같은 scheduleId의 할 일을 계획별 그룹 칩 하나로 표시
+ * - 날짜 칸에 계획 기간과 그 날 할 일을 표시하고, 칸 높이는 행 수만큼 자란다 (잘라내기 없음)
+ * - 같은 scheduleId의 할 일을 계획별 그룹 칩 하나로 표시한다.
+ * - 할 일이 없는 계획도 startDate~endDate 동안 빈 기간 칩으로 표시한다.
  * - 그룹 칩/칸 클릭 → onSelectDate(date), 개별 할 일은 날짜별 패널에서 확인
  * - 시간 없음, 일 단위
  */
-function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDate }) {
+function MonthCalendar({
+  year,
+  month,
+  days = [],
+  schedules = [],
+  today,
+  selectedDate,
+  onSelectDate,
+}) {
   const cells = buildMonthGridMonFirst(year, month)
   const byDate = Object.fromEntries(days.map((d) => [d.date, d]))
   const groupsByDate = Object.fromEntries(
-    cells.filter(Boolean).map((date) => [date, groupBySchedule(byDate[date]?.items)]),
+    cells
+      .filter(Boolean)
+      .map((date) => [date, groupBySchedule(byDate[date]?.items, schedules, date)]),
   )
   const laneKeysByWeek = Array.from({ length: Math.ceil(cells.length / 7) }, (_, weekIndex) => {
     const laneKeys = []
@@ -113,7 +145,8 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
                   const previousDate = idx % 7 > 0 ? cells[idx - 1] : null
                   const nextDate = idx % 7 < 6 ? cells[idx + 1] : null
                   const continuesBefore = Boolean(
-                    previousDate && groupsByDate[previousDate]?.some((item) => item.key === laneKey),
+                    previousDate &&
+                    groupsByDate[previousDate]?.some((item) => item.key === laneKey),
                   )
                   const continuesAfter = Boolean(
                     nextDate && groupsByDate[nextDate]?.some((item) => item.key === laneKey),
@@ -125,8 +158,16 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
                       key={group.key}
                       className={`chip-item cal__schedule-chip ${continuesBefore ? 'is-continued-before' : ''} ${continuesAfter ? 'is-continued-after' : ''} ${isCompletedGroup(group) ? 'is-done' : ''} ${isMutedGroup(group) ? 'is-muted' : ''}`}
                       style={{ '--chip-color': colorForSchedule(group.scheduleId) }}
-                      title={group.items.map(itemTooltip).join('\n')}
-                      aria-label={`${group.title}, ${date}, 할 일 ${group.items.length}개`}
+                      title={
+                        group.items.length > 0
+                          ? group.items.map(itemTooltip).join('\n')
+                          : `${group.title} · 등록된 할 일 없음`
+                      }
+                      aria-label={`${group.title}, ${date}, ${
+                        group.items.length > 0
+                          ? `할 일 ${group.items.length}개`
+                          : '등록된 할 일 없음'
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelectDate?.(date)
@@ -135,7 +176,9 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
                       <span className="cal__schedule-title">
                         {continuesBefore ? '' : group.title}
                       </span>
-                      <span className="cal__schedule-count">{group.items.length}</span>
+                      {group.items.length > 0 && (
+                        <span className="cal__schedule-count">{group.items.length}</span>
+                      )}
                     </button>
                   )
                 })}
