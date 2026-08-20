@@ -76,7 +76,7 @@ function SchedulesPage() {
   }
 
   return (
-    <section className="page">
+    <section className="page page--centered">
       <header className="page-head">
         <div>
           <h1 className="page-title">내 계획</h1>
