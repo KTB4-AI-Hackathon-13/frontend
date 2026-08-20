@@ -116,7 +116,7 @@ function RankingsPage() {
         <div>
           <p className="ranking__eyebrow">LEADERBOARD</p>
           <h1 className="page-title">랭킹</h1>
-          <p className="page-sub">꾸준히 계획을 실천한 사람들과 함께 성장해요.</p>
+          <p className="page-sub">현재 활동 기록으로 계산한 순위를 확인해 보세요.</p>
         </div>
         {data?.rankingDate && <span className="ranking__date">{formatDate(data.rankingDate)}</span>}
       </header>
@@ -202,7 +202,9 @@ function RankingsPage() {
                   <h2>{selectedType.label} 랭킹</h2>
                   <p>{selectedType.description}을 기준으로 집계했어요.</p>
                 </div>
-                <span>상위 {data.items.length}명</span>
+                <span>
+                  참여 {number.format(data.participantCount)}명 · 상위 {data.items.length}명
+                </span>
               </div>
               <div className="ranking__columns" aria-hidden="true">
                 <span>순위</span>
