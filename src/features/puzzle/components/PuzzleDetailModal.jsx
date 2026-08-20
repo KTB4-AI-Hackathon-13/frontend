@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import PuzzleBoard from './PuzzleBoard.jsx'
 import { getPuzzleDetail } from '../api/puzzleCache.js'
 import { usePuzzleImage } from '../hooks/usePuzzleImage.js'
+import { schedulesPathForPuzzleStatus } from '../utils/scheduleLink.js'
 import Modal from '../../schedule/components/Modal.jsx'
 import { useAsync } from '../../schedule/hooks/useAsync.js'
 import { formatDot } from '../../schedule/utils/date.js'
@@ -14,8 +15,16 @@ import ErrorNotice from '../../../shared/components/ErrorNotice.jsx'
  * - GET /puzzles/{puzzleId} 로 조각별 획득 상태를 받아 판을 그린다
  * - 조각에 마우스를 올리면 어떤 할 일로 딴 조각인지 + 몇 번째로 획득했는지(position) 보여준다
  * - 공개 범위(visibility)는 서버 값을 배지로 보여주기만 한다. 변경 PATCH·좋아요·신고는 백엔드에 없어 UI 도 두지 않는다
+ * - "계획" 링크는 이 퍼즐 상태에 맞는 내 계획 탭(진행 중/완료)으로 보낸다
  */
-function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) {
+function PuzzleDetailModal({
+  puzzleId,
+  pieceCount,
+  earnedPieceCount,
+  summaryImageId = null,
+  summaryImageUrl = null,
+  onClose,
+}) {
   // 카드가 이미 받아둔 상세가 있으면 캐시에서 즉시 나온다 (추가 요청 없음)
   const {
     data: puzzle,
@@ -28,7 +37,15 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
   )
   const [hovered, setHovered] = useState(null)
 
-  const { imageUrl, hasImage, imageLoading, onImageError } = usePuzzleImage(puzzle)
+  const imagePuzzle = puzzle
+    ? {
+        ...puzzle,
+        imageId: puzzle.imageId ?? summaryImageId,
+        imageUrl: puzzle.imageUrl ?? summaryImageUrl,
+      }
+    : null
+  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError } =
+    usePuzzleImage(imagePuzzle)
   const complete = puzzle?.status === 'COMPLETED'
   const pct = puzzle?.pieceCount
     ? Math.round((puzzle.earnedPieceCount / puzzle.pieceCount) * 100)
@@ -77,7 +94,11 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
               <div>
                 <dt>계획</dt>
                 <dd>
-                  <Link to="/schedules" onClick={onClose} className="link">
+                  <Link
+                    to={schedulesPathForPuzzleStatus(puzzle.status)}
+                    onClick={onClose}
+                    className="link"
+                  >
                     {puzzle.title}
                   </Link>
                 </dd>
@@ -99,7 +120,11 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
 
             <p className="muted small">
               할 일을 하나 완료할 때마다 조각이 한 개씩 열려요. 모두 열면 원본 그림이 공개됩니다.
-              {!hasImage && !imageLoading && ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.'}
+              {!hasImage &&
+                !imageLoading &&
+                (imageFailed
+                  ? ' 그림을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.'
+                  : ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.')}
             </p>
           </div>
         </div>

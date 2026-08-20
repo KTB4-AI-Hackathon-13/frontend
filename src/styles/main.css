@@ -2639,6 +2639,13 @@ a.schedule-modal__edit-option:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
 }
+.pcard--readonly {
+  cursor: default;
+}
+.pcard--readonly:hover {
+  border-color: var(--border-strong);
+  transform: none;
+}
 .pcard__thumb {
   display: grid;
   place-items: center;
