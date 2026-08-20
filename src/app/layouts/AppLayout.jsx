@@ -29,8 +29,8 @@ function AppLayout() {
   return (
     <div className="shell">
       <header className="app-header">
-        <NavLink to="/" className="sidebar__brand" aria-label="AI Planner 홈">
-          <span className="sidebar__brand-copy"><strong>AI Planner</strong></span>
+        <NavLink to="/" className="sidebar__brand" aria-label="JustDO 홈">
+          <span className="sidebar__brand-copy"><strong>JustDO</strong></span>
         </NavLink>
         <HeaderNav user={user} isLoadingUser={isLoadingUser} />
       </header>
