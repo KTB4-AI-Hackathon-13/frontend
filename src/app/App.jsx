@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import AppLayout from './layouts/AppLayout.jsx'
+import ConversationPage from '../pages/ConversationPage.jsx'
 import HomePage from '../pages/HomePage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
@@ -15,6 +16,7 @@ function App() {
       <Route element={<AppLayout />}>
         {/* 07 메인 대시보드: 월간 캘린더 + 오늘 할 일 체크 · 할 일 수정/삭제는 모달 (5·6번) */}
         <Route path="/" element={<HomePage />} />
+        <Route path="/conversations" element={<ConversationPage />} />
         {/* 내 계획 목록 — 행 클릭 시 계획 모달(퍼즐 진행도·제목/기간 편집·삭제). 상세 페이지 없음 */}
         <Route path="/schedules" element={<SchedulesPage />} />
         <Route path="/schedules/:scheduleId" element={<Navigate to="/schedules" replace />} />
