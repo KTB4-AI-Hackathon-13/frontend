@@ -22,7 +22,6 @@ const PERIOD_OPTIONS = [
   { value: RANKING_PERIOD.DAILY, label: '일간' },
   { value: RANKING_PERIOD.WEEKLY, label: '주간' },
   { value: RANKING_PERIOD.MONTHLY, label: '월간' },
-  { value: RANKING_PERIOD.YEARLY, label: '연간' },
 ]
 
 const TIER_LABEL = {

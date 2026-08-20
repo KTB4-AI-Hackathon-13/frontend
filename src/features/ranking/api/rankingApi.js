@@ -11,7 +11,6 @@ export const RANKING_PERIOD = {
   DAILY: 'DAILY',
   WEEKLY: 'WEEKLY',
   MONTHLY: 'MONTHLY',
-  YEARLY: 'YEARLY',
   ALL: 'ALL',
 }
 
