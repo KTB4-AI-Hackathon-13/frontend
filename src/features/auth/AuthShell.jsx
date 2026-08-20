@@ -7,8 +7,8 @@ function AuthShell({ children, eyebrow, title, description }) {
       <div className="auth-page__glow auth-page__glow--two" />
 
       <header className="auth-header">
-        <Link to="/" aria-label="AI Planner 홈">
-          AI PLANNER
+        <Link to="/" aria-label="JustDO 홈">
+          JUSTDO
         </Link>
       </header>
 
