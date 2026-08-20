@@ -1503,6 +1503,23 @@ button {
   stroke-opacity: 0.6;
 }
 
+/* 이미지 서명 URL 을 받아오는 동안(짧은 네트워크 왕복) 보여주는 shimmer */
+.pboard__skeleton {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1;
+  animation: pboard-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes pboard-shimmer {
+  0%,
+  100% {
+    fill-opacity: 0.4;
+  }
+  50% {
+    fill-opacity: 0.85;
+  }
+}
+
 .pboard__outline {
   fill: transparent;
   stroke: var(--bg);

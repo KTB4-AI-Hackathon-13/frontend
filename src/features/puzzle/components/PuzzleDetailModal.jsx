@@ -28,7 +28,7 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
   )
   const [hovered, setHovered] = useState(null)
 
-  const { imageUrl, hasImage, onImageError } = usePuzzleImage(puzzle)
+  const { imageUrl, hasImage, imageLoading, onImageError } = usePuzzleImage(puzzle)
   const complete = puzzle?.status === 'COMPLETED'
   const pct = puzzle?.pieceCount
     ? Math.round((puzzle.earnedPieceCount / puzzle.pieceCount) * 100)
@@ -44,6 +44,7 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
           <div className="pdetail__board">
             <PuzzleBoard
               imageUrl={imageUrl}
+              imageLoading={imageLoading}
               pieces={puzzle.pieces}
               size={320}
               seed={puzzle.id}
@@ -96,7 +97,7 @@ function PuzzleDetailModal({ puzzleId, pieceCount, earnedPieceCount, onClose }) 
 
             <p className="muted small">
               할 일을 하나 완료할 때마다 조각이 한 개씩 열려요. 모두 열면 원본 그림이 공개됩니다.
-              {!hasImage && ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.'}
+              {!hasImage && !imageLoading && ' 이 퍼즐에는 아직 그림이 배정되지 않았어요.'}
             </p>
           </div>
         </div>

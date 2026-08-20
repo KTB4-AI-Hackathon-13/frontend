@@ -16,6 +16,7 @@ const FRAME = 600
  *
  * @param {{
  *   imageUrl: string | null,   서버 이미지가 없으면 null — 그때는 조각 틀만 그린다
+ *   imageLoading?: boolean,        서명 URL 을 받아오는 중 (스켈레톤으로 표시)
  *   pieces: import('../api/types.js').PuzzlePiece[],
  *   size?: number,                 판 한 변(px)
  *   showNumbers?: boolean,
@@ -26,6 +27,7 @@ const FRAME = 600
  */
 function PuzzleBoard({
   imageUrl,
+  imageLoading = false,
   pieces = [],
   size = 240,
   showNumbers = false,
@@ -44,31 +46,41 @@ function PuzzleBoard({
 
   const viewBox = `${-pad} ${-pad} ${FRAME + pad * 2} ${FRAME + pad * 2}`
 
-  const picture = imageUrl ? (
-    <image
-      href={imageUrl}
-      x="0"
-      y="0"
-      width={FRAME}
-      height={FRAME}
-      preserveAspectRatio="xMidYMid slice"
-      onError={onImageError}
-    />
-  ) : null
-
   // 완성하면 조각선만 옅게 남기고 원본 그림을 통째로 보여준다 (와이어프레임 p17-6 "원본 이미지 공개")
   if (complete) {
+    const picture = imageUrl ? (
+      <image
+        href={imageUrl}
+        x="0"
+        y="0"
+        width={FRAME}
+        height={FRAME}
+        preserveAspectRatio="xMidYMid slice"
+        decoding="async"
+        onError={onImageError}
+      />
+    ) : null
+    const pieceClass = imageUrl
+      ? 'pboard__outline'
+      : imageLoading
+        ? 'pboard__skeleton'
+        : 'pboard__filled'
     return (
       <div className="pboard is-complete" style={{ width: size, height: size }}>
         <svg viewBox={viewBox} className="pboard__svg" role="img" aria-label="완성된 퍼즐">
           {picture}
           {paths.map((d, i) => (
-            <path key={i} d={d} className={imageUrl ? 'pboard__outline' : 'pboard__filled'} />
+            <path key={i} d={d} className={pieceClass} />
           ))}
         </svg>
       </div>
     )
   }
+
+  // 이미지를 조각마다 따로 그리면(clip) 같은 그림을 조각 수만큼 반복 디코드하게 되어 조각이
+  // 많아질수록 느려진다. 대신 획득한 조각 전체를 하나의 clipPath 로 합쳐서 이미지는 한 번만 그린다.
+  const earnedIdx = []
+  pieces.forEach((p, i) => p.earned && earnedIdx.push(i))
 
   return (
     <div
@@ -77,33 +89,37 @@ function PuzzleBoard({
       onMouseLeave={() => onPieceHover?.(null)}
     >
       <svg viewBox={viewBox} className="pboard__svg" role="img" aria-label="퍼즐판">
-        <defs>
-          {paths.map((d, i) => (
-            <clipPath id={`${uid}-c${i}`} key={i}>
-              <path d={d} />
-            </clipPath>
-          ))}
-        </defs>
+        {imageUrl && earnedIdx.length > 0 && (
+          <>
+            <defs>
+              <clipPath id={`${uid}-earned`}>
+                {earnedIdx.map((i) => (
+                  <path d={paths[i]} key={i} />
+                ))}
+              </clipPath>
+            </defs>
+            <image
+              href={imageUrl}
+              x="0"
+              y="0"
+              width={FRAME}
+              height={FRAME}
+              preserveAspectRatio="xMidYMid slice"
+              decoding="async"
+              clipPath={`url(#${uid}-earned)`}
+              onError={onImageError}
+            />
+          </>
+        )}
 
         {pieces.map((piece, i) => (
           <g key={piece.scheduleItemId ?? i}>
             {!piece.earned ? (
               <path d={paths[i]} className="pboard__hole" />
-            ) : imageUrl ? (
-              <image
-                href={imageUrl}
-                x="0"
-                y="0"
-                width={FRAME}
-                height={FRAME}
-                preserveAspectRatio="xMidYMid slice"
-                clipPath={`url(#${uid}-c${i})`}
-                onError={onImageError}
-              />
-            ) : (
-              // 서버가 아직 그림을 배정하지 않았을 때 — 획득한 조각은 채워서 진행도를 보여준다
-              <path d={paths[i]} className="pboard__filled" />
-            )}
+            ) : !imageUrl ? (
+              // 그림이 아직 없거나(서버 미배정) 서명 URL 을 받아오는 중이면 조각을 채워서 진행도를 보여준다
+              <path d={paths[i]} className={imageLoading ? 'pboard__skeleton' : 'pboard__filled'} />
+            ) : null}
             <path
               d={paths[i]}
               className={`pboard__outline ${piece.earned ? 'is-earned' : ''}`}
