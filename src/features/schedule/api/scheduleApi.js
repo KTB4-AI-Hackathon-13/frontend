@@ -55,6 +55,14 @@ export function deleteSchedule(scheduleId) {
 }
 
 /**
+ * AI 화면에서 받은 원본 JSON(summary, daily_tasks)을 확정 저장한다.
+ * 성공하면 해당 DRAFT 스케줄이 ACTIVE가 되며 홈 GET /calendar 조회에 포함된다.
+ */
+export function submitAiPlan(scheduleId, aiPlanJson) {
+  return client.post(`/schedules/${scheduleId}/ai-plan`, aiPlanJson)
+}
+
+/**
  * 4.5 월별 캘린더 `GET /calendar?year&month` — 작업 있는 날짜만, 여러 스케줄 섞여 옴
  * @returns {Promise<CalendarResponse>}
  */
@@ -74,7 +82,8 @@ export function fetchToday() {
 
 /**
  * 5.1 추가 `POST /schedules/{scheduleId}/items` → 201
- * body: title(필수), scheduledDate(필수), description?, categoryId?, workload?, priority?, position?
+ * body: title, scheduledDate, itemType, description?, categoryId?, workload?,
+ *       estimatedMinutes?, priority?, position?
  * 422 DATE_OUTSIDE_SCHEDULE_PERIOD / 422 MAX_DAILY_TASKS_EXCEEDED / 400 INVALID_REQUEST
  * @returns {Promise<ScheduleItem>}
  */

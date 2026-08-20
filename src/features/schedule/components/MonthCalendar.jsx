@@ -1,5 +1,24 @@
-import { ITEM_STATUS, colorForSchedule } from '../utils/constants.js'
+import {
+  ITEM_SOURCE_LABEL,
+  ITEM_STATUS,
+  ITEM_TYPE_LABEL,
+  categoryLabelFor,
+  colorForSchedule,
+} from '../utils/constants.js'
 import { WEEKDAY_LABELS_MON_FIRST, buildMonthGridMonFirst } from '../utils/date.js'
+import { orderScheduleItems } from '../utils/items.js'
+
+const itemTooltip = (item) =>
+  [
+    item.scheduleTitle,
+    item.title,
+    categoryLabelFor(item.categoryId) ?? ITEM_TYPE_LABEL[item.itemType],
+    ITEM_SOURCE_LABEL[item.source],
+    item.priority ? `우선순위 ${item.priority}` : null,
+    item.workload ? `작업량 ${item.workload}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
 /**
  * 와이어프레임 07 — 월간 캘린더 (월요일 시작).
@@ -28,7 +47,7 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
         {cells.map((date, idx) => {
           if (!date) return <div key={`e${idx}`} className="cal__cell cal__cell--empty" />
           const day = byDate[date]
-          const list = day?.items ?? []
+          const list = orderScheduleItems(day?.items)
           const dow = idx % 7
           const classes = [
             'cal__cell',
@@ -57,7 +76,7 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
                         : ''
                     }`}
                     style={{ '--chip-color': colorForSchedule(it.scheduleId) }}
-                    title={`${it.scheduleTitle} · ${it.title}`}
+                    title={itemTooltip(it)}
                     onClick={(e) => {
                       e.stopPropagation()
                       onOpenItem?.(it, date)

@@ -1311,6 +1311,18 @@ button {
   color: var(--muted);
 }
 
+.field__readonly {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .field-row {
   display: flex;
   gap: 12px;
@@ -2267,6 +2279,107 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-2);
+}
+
+.schedule-modal__edit-method {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-modal__edit-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.schedule-modal__edit-heading > strong {
+  font-size: 13px;
+}
+
+.schedule-modal__edit-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-modal__edit-option {
+  min-width: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.schedule-modal__edit-option.is-active {
+  border-color: var(--chip-color, var(--primary));
+  background: color-mix(in srgb, var(--chip-color, var(--primary)) 7%, var(--surface));
+}
+
+a.schedule-modal__edit-option:hover {
+  border-color: var(--primary);
+  background: var(--surface-2);
+}
+
+.schedule-modal__edit-option > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.schedule-modal__edit-option strong {
+  font-size: 12px;
+}
+
+.schedule-modal__edit-option small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.schedule-modal__edit-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.schedule-modal__edit-option.is-active .schedule-modal__edit-icon {
+  background: var(--chip-color, var(--primary));
+  color: var(--primary-text);
+}
+
+.schedule-modal__edit-arrow {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .schedule-modal__edit-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .schedule-modal__edit-options {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 /* =========================================================

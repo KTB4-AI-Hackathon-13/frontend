@@ -53,13 +53,7 @@ function SchedulesPage() {
             계획을 누르면 진행도를 보고 이름·기간을 고치거나 삭제할 수 있어요.
           </p>
         </div>
-        <Link
-          to="/ai"
-          className="btn btn--primary"
-          aria-disabled="true"
-          onClick={(e) => e.preventDefault()}
-          title="AI 계획 만들기 (다른 담당 · 준비 중)"
-        >
+        <Link to="/conversations" className="btn btn--primary">
           AI 계획 만들기
         </Link>
       </header>

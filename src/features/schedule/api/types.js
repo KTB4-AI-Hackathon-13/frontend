@@ -4,6 +4,19 @@
  *
  * @typedef {'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'} ScheduleStatus
  * @typedef {'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'CANCELLED'} ItemStatus
+ * @typedef {'TASK' | 'STUDY' | 'PRACTICE' | 'REVIEW' | 'EXERCISE' | 'REST' | 'ETC'} ItemType
+ * @typedef {'USER' | 'AI' | 'RESCHEDULE_BATCH'} ItemSource
+ *
+ * @typedef {Object} AiPlanItem
+ * @property {string} scheduled_date
+ * @property {string} title
+ * @property {string} description
+ * @property {number} estimated_min
+ * @property {ItemType} item_type
+ *
+ * @typedef {Object} AiPlanJson
+ * @property {string} summary
+ * @property {AiPlanItem[]} daily_tasks
  *
  * @typedef {Object} ScheduleSummary           목록 항목 / 수정 응답
  * @property {number} id
@@ -23,10 +36,13 @@
  * @property {string} title
  * @property {string | null} description
  * @property {string} scheduledDate            YYYY-MM-DD
+ * @property {number | null} estimatedMinutes
+ * @property {ItemType} itemType
  * @property {number} position                 같은 날짜 안 표시 순서 (0부터) — 서버 정렬 그대로 사용
  * @property {number} workload                 상대적 업무량 (기본 1)
  * @property {number} priority                 1(높음) ~ 5(낮음), 기본 3
  * @property {ItemStatus} status
+ * @property {ItemSource} source
  * @property {string | null} completedAt       ISO 8601
  *
  * @typedef {Object} ScheduleDay
@@ -43,10 +59,15 @@
  * @property {string} scheduleTitle
  * @property {number | null} categoryId
  * @property {string} title
+ * @property {string | null} description
+ * @property {string} scheduledDate
+ * @property {number | null} estimatedMinutes
+ * @property {ItemType} itemType
  * @property {number} position
  * @property {number} workload
  * @property {number} priority
  * @property {ItemStatus} status
+ * @property {ItemSource} source
  * @property {string | null} completedAt
  *
  * @typedef {Object} DailyItemsDay
