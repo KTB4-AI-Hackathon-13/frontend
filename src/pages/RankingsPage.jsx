@@ -11,14 +11,12 @@ import ErrorNotice from '../shared/components/ErrorNotice.jsx'
 const TYPE_OPTIONS = [
   { value: RANKING_TYPE.STREAK, label: '연속 실천', description: '계획을 실천한 날' },
   { value: RANKING_TYPE.COMPLETED_PUZZLES, label: '완성 퍼즐', description: '완성한 퍼즐' },
-  { value: RANKING_TYPE.PUZZLE_PIECES, label: '퍼즐 조각', description: '획득한 퍼즐 조각' },
 ]
 
 const PERIOD_OPTIONS = [
-  { value: RANKING_PERIOD.DAILY, label: '일간' },
   { value: RANKING_PERIOD.WEEKLY, label: '주간' },
   { value: RANKING_PERIOD.MONTHLY, label: '월간' },
-  { value: RANKING_PERIOD.ALL, label: '전체' },
+  { value: RANKING_PERIOD.YEARLY, label: '연간' },
 ]
 
 const TIER_LABEL = {
@@ -74,7 +72,7 @@ function RankingRows({ items, type }) {
 
 function RankingsPage() {
   const [type, setType] = useState(RANKING_TYPE.STREAK)
-  const [period, setPeriod] = useState(RANKING_PERIOD.ALL)
+  const [period, setPeriod] = useState(RANKING_PERIOD.WEEKLY)
   const rankings = useAsync(() => fetchRankings({ type, period }), [type, period], {
     keepData: false,
   })
