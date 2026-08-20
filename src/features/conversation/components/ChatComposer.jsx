@@ -1,11 +1,16 @@
 import { useState } from 'react'
 
-function ChatComposer({ isSending, onSubmit }) {
+function ChatComposer({ isSending, onSubmit, maxLength = 20000 }) {
   const [content, setContent] = useState('')
 
   async function submit(event) {
     event.preventDefault()
-    if (await onSubmit(content)) setContent('')
+    const submittedContent = content
+    const pending = onSubmit(submittedContent)
+    setContent('')
+    if (!(await pending)) {
+      setContent((current) => current || submittedContent)
+    }
   }
 
   function handleKeyDown(event) {
@@ -27,7 +32,7 @@ function ChatComposer({ isSending, onSubmit }) {
         onKeyDown={handleKeyDown}
         placeholder="어떤 모습이 되고 싶은지 이야기해 주세요."
         rows={1}
-        maxLength={20000}
+        maxLength={maxLength}
         readOnly={isSending}
         aria-busy={isSending}
       />

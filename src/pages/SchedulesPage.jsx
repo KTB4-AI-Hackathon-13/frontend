@@ -54,11 +54,8 @@ function SchedulesPage() {
           </p>
         </div>
         <Link
-          to="/ai"
+          to="/conversations"
           className="btn btn--primary"
-          aria-disabled="true"
-          onClick={(e) => e.preventDefault()}
-          title="AI 계획 만들기 (다른 담당 · 준비 중)"
         >
           AI 계획 만들기
         </Link>
