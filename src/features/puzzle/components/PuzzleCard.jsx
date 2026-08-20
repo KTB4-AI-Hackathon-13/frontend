@@ -24,7 +24,7 @@ function PuzzleCard({ puzzle, onOpen }) {
   // 카드가 화면에 들어오기 전엔 이미지를 요청하지 않는다 (그리드에 카드가 여러 장이면
   // 안 보이는 카드까지 한꺼번에 서명 URL·이미지를 받아오면서 느려지는 걸 막는다)
   const [thumbRef, inView] = useInView()
-  const { imageUrl, hasImage, imageLoading, onImageError } = usePuzzleImage(puzzle, {
+  const { imageUrl, hasImage, imageLoading, imageFailed, onImageError } = usePuzzleImage(puzzle, {
     enabled: inView,
   })
 
@@ -37,9 +37,14 @@ function PuzzleCard({ puzzle, onOpen }) {
   const pieces =
     detail?.pieces ??
     Array.from({ length: total }, (_, i) => ({ scheduleItemId: i, earned: i < earned }))
+  const canOpen = typeof onOpen === 'function'
+  const CardRoot = canOpen ? 'button' : 'article'
 
   return (
-    <button type="button" className="pcard" onClick={() => onOpen?.(puzzle)}>
+    <CardRoot
+      {...(canOpen ? { type: 'button', onClick: () => onOpen(puzzle) } : {})}
+      className={`pcard ${canOpen ? '' : 'pcard--readonly'}`.trim()}
+    >
       <div className="pcard__thumb" ref={thumbRef}>
         <PuzzleBoard
           imageUrl={imageUrl}
@@ -57,7 +62,11 @@ function PuzzleCard({ puzzle, onOpen }) {
             {complete ? '완성' : '진행 중'}
           </span>
         </div>
-        {!hasImage && !imageLoading && <span className="muted small">그림 준비 중</span>}
+        {!hasImage && !imageLoading && (
+          <span className="muted small">
+            {imageFailed ? '그림을 불러오지 못했어요' : '그림 준비 중'}
+          </span>
+        )}
         <div className="pcard__meta">
           <span className="small">
             {earned} / {total} 조각 ({pct}%)
@@ -74,8 +83,10 @@ function PuzzleCard({ puzzle, onOpen }) {
           <div className="bar__fill" style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <span className="pcard__action">{complete ? '작품 보기' : '진행 보기'} ›</span>
-    </button>
+      {canOpen && (
+        <span className="pcard__action">{complete ? '작품 보기' : '진행 보기'} ›</span>
+      )}
+    </CardRoot>
   )
 }
 

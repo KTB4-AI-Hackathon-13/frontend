@@ -242,11 +242,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 15px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 8%);
+  box-shadow: 0 8px 28px rgb(46 54 128 / 10%);
 }
 .chat-composer:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 8px 32px rgb(0 0 0 / 10%);
+  box-shadow: 0 8px 32px var(--brand-glow);
 }
 .chat-composer textarea {
   width: 100%;
