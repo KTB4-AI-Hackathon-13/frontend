@@ -31,5 +31,8 @@ export const SCHEDULE_COLORS = ['#5b6cff', '#2fb38a', '#f2a33c', '#e06aa6', '#4d
 export const colorForSchedule = (scheduleId) =>
   SCHEDULE_COLORS[Math.abs(Number(scheduleId)) % SCHEDULE_COLORS.length]
 
+/** 계획 기간 상한 (백엔드 ScheduleService.MAX_SCHEDULE_PERIOD_DAYS 와 같아야 함) */
+export const MAX_SCHEDULE_PERIOD_DAYS = 30
+
 /** 하루 작업 수 제한 (user_preferences.max_daily_tasks 기본값) */
 export const DEFAULT_MAX_DAILY_TASKS = 5
