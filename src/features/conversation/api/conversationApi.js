@@ -51,9 +51,9 @@ export function generateSchedule({ conversationId, goalSummary, category, templa
       conversation_id: conversationId,
       goal_summary: goalSummary,
       category,
-      template_answers: templateAnswers,
-      busy_dates: [],
-      long_term_context: null,
+      templateAnswers,
+      busyDates: [],
+      longTermContext: null,
     },
     { timeout: 60000 },
   )
