@@ -277,6 +277,14 @@
   font-size: 19px;
   cursor: pointer;
 }
+.chat-composer button svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .chat-composer button:disabled {
   background: var(--border-strong);
   cursor: default;

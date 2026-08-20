@@ -5,11 +5,15 @@ import { useAuth } from '../../features/auth/useAuth.js'
 import { AUTH_EVENT_UNAUTHORIZED, authEvents } from '../../shared/api/client.js'
 import Sidebar from './Sidebar.jsx'
 
+const SIDEBAR_STORAGE_KEY = 'ai-planner.sidebar-open'
+
 function AppLayout() {
   const navigate = useNavigate()
   const { user, isLoadingUser, refreshUser, clearUser } = useAuth()
   const initializedUserRef = useRef(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true',
+  )
 
   // 세션 없음/만료(401 AUTHENTICATION_REQUIRED)면 로그인 화면으로. client.js 인터셉터가 authEvents 로 알려준다.
   useEffect(() => {
@@ -26,6 +30,10 @@ function AppLayout() {
     initializedUserRef.current = true
     refreshUser().catch(() => { })
   }, [refreshUser, user])
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isSidebarOpen))
+  }, [isSidebarOpen])
 
   return (
     <div className="shell">

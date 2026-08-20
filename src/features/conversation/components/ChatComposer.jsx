@@ -32,7 +32,13 @@ function ChatComposer({ isSending, onSubmit }) {
         aria-busy={isSending}
       />
       <button type="submit" disabled={isSending || !content.trim()} aria-label="메시지 보내기">
-        {isSending ? '···' : '↑'}
+        {isSending ? (
+          '···'
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+          </svg>
+        )}
       </button>
     </form>
   )
