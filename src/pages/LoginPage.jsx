@@ -54,6 +54,15 @@ function LoginPage() {
         {location.state?.signedUp && (
           <p className="auth-form__success" role="status">계정이 만들어졌어요. 로그인해주세요.</p>
         )}
+        {location.state?.passwordChanged && (
+          <p className="auth-form__success" role="status">비밀번호가 변경되었습니다. 다시 로그인해주세요.</p>
+        )}
+        {location.state?.withdrawn && (
+          <p className="auth-form__success" role="status">회원 탈퇴가 처리되었습니다.</p>
+        )}
+        {location.state?.loggedOut && (
+          <p className="auth-form__success" role="status">안전하게 로그아웃되었습니다.</p>
+        )}
         <AuthField
           id="email"
           label="이메일"

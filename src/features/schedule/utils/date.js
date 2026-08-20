@@ -52,3 +52,10 @@ export const todayLocal = () => toDateStringFromDate(new Date())
 
 /** YYYY-MM-DD 가 [start, end] 안인지 */
 export const isWithin = (date, start, end) => date >= start && date <= end
+
+/** YYYY-MM-DD 에서 n일 이동한 날짜 (음수 가능) */
+export function addDays(dateStr, n) {
+  const d = parseDate(dateStr)
+  d.setDate(d.getDate() + n)
+  return toDateStringFromDate(d)
+}
