@@ -132,7 +132,7 @@ function MyPage() {
         </div>
         <label className="account-confirm"><input type="checkbox" checked={confirmWithdraw} onChange={(e) => setConfirmWithdraw(e.target.checked)} /><span>탈퇴 후 계정을 복구할 수 없음을 확인했습니다.</span></label>
         <Status status={withdrawStatus} />
-        <div className="account-card__actions"><button className="is-danger" type="submit" disabled={busy === 'withdraw'}>{busy === 'withdraw' ? '처리 중...' : '회원 탈퇴'}</button></div>
+        <div className="account-card__actions"><button className="is-danger" type="submit" disabled={busy === 'withdraw' || !confirmWithdraw}>{busy === 'withdraw' ? '처리 중...' : '회원 탈퇴'}</button></div>
       </form>
       <Toast toast={toast} />
     </section>
