@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { todayLocal } from '../../schedule/utils/date.js'
+
 const MAX_PLAN_DAYS = 30
 
 function addDays(isoDate, days) {
@@ -20,6 +22,7 @@ function openDatePicker(event) {
 
 function TemplateForm({ questions, disabled, initialAnswers = {}, onAnswersChange, onSubmit }) {
   const [answers, setAnswers] = useState(initialAnswers)
+  const today = todayLocal()
 
   function update(id, value) {
     setAnswers((current) => {
@@ -96,7 +99,13 @@ function TemplateForm({ questions, disabled, initialAnswers = {}, onAnswersChang
               required={question.required}
               placeholder={question.placeholder ?? ''}
               value={answers[question.id] ?? ''}
-              min={question.id === 'end_date' ? answers.start_date : undefined}
+              min={
+                question.id === 'start_date'
+                  ? today
+                  : question.id === 'end_date'
+                    ? answers.start_date || today
+                    : undefined
+              }
               max={
                 question.id === 'end_date'
                   ? addDays(answers.start_date, MAX_PLAN_DAYS - 1)

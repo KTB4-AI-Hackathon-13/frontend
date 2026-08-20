@@ -70,9 +70,8 @@ function ConversationSidebar({ currentConversationId, refreshKey }) {
           <NavLink
             key={conversation.conversationId}
             to={conversationPath(conversation)}
-            className={`conversation-sidebar__item ${
-              conversation.conversationId === currentConversationId ? 'is-active' : ''
-            }`}
+            className={`conversation-sidebar__item ${conversation.conversationId === currentConversationId ? 'is-active' : ''
+              }`}
             title={conversation.title || '제목 없는 대화'}
           >
             <span>{conversation.title || '제목 없는 대화'}</span>

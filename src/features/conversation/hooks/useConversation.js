@@ -4,10 +4,12 @@ import {
   createConversation,
   generateSchedule,
   generateScheduleTemplate,
+  getConversation,
   getConversationBySchedule,
   getMessages,
   sendMessage,
 } from '../api/conversationApi.js'
+import { todayLocal } from '../../schedule/utils/date.js'
 
 const WORKFLOW_STORAGE_KEY = 'my-alter-ego.conversation-workflow-v1'
 
@@ -69,13 +71,14 @@ export function useConversation({
   requestedConversationId,
   scheduleId,
   createNew = false,
+  onConversationCreated,
+  onLinkedSchedule,
   onConfirmed,
 } = {}) {
   const [storedWorkflow] = useState(() => {
     const stored = readStoredWorkflow()
     if (
       createNew ||
-      scheduleId ||
       (requestedConversationId && stored.conversationId !== requestedConversationId)
     ) {
       return {}
@@ -108,6 +111,7 @@ export function useConversation({
         let id = requestedConversationId
         const linkedScheduleId = scheduleId ? Number(scheduleId) : null
         let allMessages
+        let resumeContext = null
         if (createNew) {
           clearStoredWorkflow()
           id = null
@@ -116,8 +120,14 @@ export function useConversation({
           const conversation = await getConversationBySchedule(linkedScheduleId)
           id = conversation.conversationId
           allMessages = await getAllMessages(id)
+          resumeContext = conversation.resumeContext
         } else if (id) {
           try {
+            const conversation = await getConversation(id)
+            if (conversation.scheduleId) {
+              onLinkedSchedule?.(conversation.scheduleId)
+              return
+            }
             allMessages = await getAllMessages(id)
           } catch (requestError) {
             if (requestError?.status !== 404 && requestError?.status !== 403) throw requestError
@@ -126,13 +136,33 @@ export function useConversation({
           }
         }
         if (!active) return
-        if (id !== storedWorkflow.conversationId || linkedScheduleId) {
+        if (id !== storedWorkflow.conversationId) {
           setTemplate(null)
           setTemplateDraft({})
           setPlanTurn(null)
           setPlanContext(null)
-          setConfirmedScheduleId(linkedScheduleId)
+          setConfirmedScheduleId(null)
           setIsAwaitingGoal(true)
+        }
+        if (linkedScheduleId) {
+          setConfirmedScheduleId(linkedScheduleId)
+          if (resumeContext) {
+            setPlanContext({
+              goalSummary: resumeContext.goalSummary,
+              category: resumeContext.category,
+              templateAnswers: resumeContext.templateAnswers,
+            })
+            setPlanTurn({
+              plan: resumeContext.currentPlan,
+              feedback_history: resumeContext.feedbackHistory ?? [],
+              completed_task_ids: resumeContext.completedTaskIds ?? [],
+              ready_to_confirm: false,
+              confirmed: true,
+              submitted: true,
+              schedule_id: linkedScheduleId,
+            })
+            setIsAwaitingGoal(false)
+          }
         }
         setConversationId(id)
         setMessages(allMessages)
@@ -148,7 +178,13 @@ export function useConversation({
     return () => {
       active = false
     }
-  }, [createNew, requestedConversationId, scheduleId, storedWorkflow])
+  }, [
+    createNew,
+    onLinkedSchedule,
+    requestedConversationId,
+    scheduleId,
+    storedWorkflow,
+  ])
 
   useEffect(() => {
     if (isLoading || !conversationId) return
@@ -215,15 +251,11 @@ export function useConversation({
       try {
         let activeConversationId = conversationId
         if (!activeConversationId) {
-          creationPromiseRef.current ??= createConversation('나의 새로운 계획')
+          creationPromiseRef.current ??= createConversation(trimmed.slice(0, 200))
           const created = await creationPromiseRef.current
           activeConversationId = created.conversationId
           setConversationId(activeConversationId)
-          globalThis.history?.replaceState?.(
-            null,
-            '',
-            `/conversations/${activeConversationId}`,
-          )
+          onConversationCreated?.(activeConversationId)
         }
 
         if (isAwaitingGoal) {
@@ -253,14 +285,13 @@ export function useConversation({
           ...current.map((message) =>
             message.id === optimisticMessage.id ? { ...message, pending: false } : message,
           ),
-          localMessage('ASSISTANT', result.assistant_message),
+          localMessage('ASSISTANT', result.assistant_message, { planDraft: result }),
         ])
         setPlanTurn(result)
         if (result.confirmed && result.submitted && result.schedule_id) {
           setConfirmedScheduleId(result.schedule_id)
         }
         if (result.confirmed) {
-          clearStoredWorkflow()
           onConfirmed?.(result)
         }
         return true
@@ -274,7 +305,15 @@ export function useConversation({
         setIsSending(false)
       }
     },
-    [conversationId, isAwaitingGoal, isSending, onConfirmed, planContext, planTurn],
+    [
+      conversationId,
+      isAwaitingGoal,
+      isSending,
+      onConfirmed,
+      onConversationCreated,
+      planContext,
+      planTurn,
+    ],
   )
 
   const submitTemplateAnswers = useCallback(
@@ -282,6 +321,10 @@ export function useConversation({
       if (!conversationId || !template || isSending) return false
       const start = templateAnswers.start_date
       const end = templateAnswers.end_date
+      if (start && start < todayLocal()) {
+        setError('계획 시작일은 오늘 이후로 선택해 주세요.')
+        return false
+      }
       if (start && end) {
         const days = (new Date(end) - new Date(start)) / 86400000
         if (days < 0 || days >= 30) {
@@ -299,7 +342,10 @@ export function useConversation({
           templateAnswers,
         })
         setMessages((current) =>
-          [...current, localMessage('ASSISTANT', result.assistant_message)].filter(Boolean),
+          [
+            ...current,
+            localMessage('ASSISTANT', result.assistant_message, { planDraft: result }),
+          ].filter(Boolean),
         )
         const hasPlan = (result.plan?.daily_tasks?.length ?? 0) > 0
         if (hasPlan) {
@@ -334,6 +380,7 @@ export function useConversation({
     templateDraft,
     planTurn,
     confirmedScheduleId,
+    canContinue: Boolean(!isAwaitingGoal && planContext && planTurn?.plan),
     isLoading,
     isLoadingOlder,
     isSending,
