@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthField from '../features/auth/AuthField.jsx'
 import AuthShell from '../features/auth/AuthShell.jsx'
 import { useAuth } from '../features/auth/useAuth.js'
-import { login } from '../features/auth/authApi.js'
+import { login, startKakaoLogin } from '../features/auth/authApi.js'
 import Toast from '../features/schedule/components/Toast.jsx'
 import { useToast } from '../features/schedule/hooks/useToast.js'
 
@@ -13,11 +13,22 @@ function LoginPage() {
   const location = useLocation()
   const { refreshUser } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
+  const [error, setError] = useState(() =>
+    location.state?.oauthError ? '카카오 로그인에 실패했습니다. 다시 시도해주세요.' : '',
+  )
   const [submitting, setSubmitting] = useState(false)
+  const [oauthStarting, setOauthStarting] = useState(false)
   const { toast, show: showToast } = useToast(3000)
 
   useEffect(() => {
+    if (location.state?.oauthError) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: { ...location.state, oauthError: false },
+      })
+      return
+    }
+
     if (!location.state?.loggedOut) return
 
     showToast('로그아웃되었습니다.', 'success')
@@ -45,6 +56,12 @@ function LoginPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleKakaoLogin = () => {
+    setError('')
+    setOauthStarting(true)
+    startKakaoLogin()
   }
 
   return (
@@ -95,6 +112,18 @@ function LoginPage() {
           {submitting ? '로그인 중...' : '로그인하고 계속하기'} <span aria-hidden="true">→</span>
         </button>
       </form>
+      <div className="auth-divider" aria-hidden="true">
+        <span>또는</span>
+      </div>
+      <button
+        className="auth-kakao"
+        type="button"
+        disabled={oauthStarting || submitting}
+        onClick={handleKakaoLogin}
+      >
+        {oauthStarting ? '카카오로 이동 중...' : '카카오로 계속하기'}
+        <span aria-hidden="true">→</span>
+      </button>
       <p className="auth-switch">
         JustDO가 처음인가요? <Link to="/signup">계정 만들기</Link>
       </p>
