@@ -926,6 +926,16 @@ button {
   display: flex;
   gap: 3px;
 }
+.ranking__scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ranking__scope .select {
+  min-width: 140px;
+}
 .ranking__segmented button,
 .ranking__period button {
   min-height: 36px;
@@ -960,6 +970,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: inherit;
+  text-decoration: none;
   box-shadow: var(--shadow);
 }
 .ranking__mine > div {
@@ -1143,6 +1155,10 @@ button {
 
 @media (max-width: 600px) {
   .ranking__filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ranking__scope {
     align-items: stretch;
     flex-direction: column;
   }
