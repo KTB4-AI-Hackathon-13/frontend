@@ -78,8 +78,7 @@ function ScheduleModal({ schedule: s, onClose, onChanged }) {
               </span>
             </div>
             <Link
-              to={`/conversations?mode=revise&scheduleId=${s.id}`}
-              state={{ mode: 'revise', scheduleId: s.id, scheduleTitle: s.title }}
+              to={`/schedules/${s.id}/conversation`}
               className="schedule-modal__edit-option"
               onClick={onClose}
             >

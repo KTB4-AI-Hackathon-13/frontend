@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import {
   createItem,
@@ -47,6 +48,8 @@ const SWIPE_COOLDOWN_MS = 650
  *   · 캘린더 위 트랙패드 가로 스와이프
  */
 function HomePage() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const localToday = todayLocal()
   const todayData = useAsync(() => fetchToday(), [])
   // 서버 기준 오늘(Asia/Seoul)을 우선, 도착 전에는 브라우저 날짜
@@ -61,6 +64,13 @@ function HomePage() {
   const [serverError, setServerError] = useState(null)
   const [busy, setBusy] = useState(false)
   const { toast, show } = useToast()
+
+  useEffect(() => {
+    const routedToast = location.state?.toast
+    if (!routedToast?.message) return
+    show(routedToast.message, routedToast.tone)
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [location.pathname, location.search, location.state, navigate, show])
 
   const calendar = useAsync(() => fetchCalendar(year, month), [year, month])
   const schedules = useAsync(() => fetchSchedules({ size: 100 }), [])

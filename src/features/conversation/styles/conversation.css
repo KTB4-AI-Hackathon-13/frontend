@@ -75,7 +75,7 @@
 .plan-card header,
 .plan-card__tasks li {
   display: grid;
-  grid-template-columns: 100px 1fr auto;
+  grid-template-columns: 18px 100px 1fr auto;
   gap: 10px;
   align-items: baseline;
 }
@@ -83,6 +83,19 @@
 .plan-card header {
   display: flex;
   justify-content: space-between;
+}
+
+.plan-card__check {
+  color: var(--success);
+  font-weight: 800;
+}
+
+.plan-card__tasks li.is-completed {
+  color: var(--muted);
+}
+
+.plan-card__tasks li.is-completed > span:not(.plan-card__check) {
+  text-decoration: line-through;
 }
 
 .plan-card header span,
@@ -126,19 +139,6 @@
   justify-content: space-between;
   gap: 8px;
   font-size: 13px;
-}
-
-.conversation-sidebar__new {
-  padding: 6px 8px;
-  color: var(--accent);
-  border-radius: 7px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.conversation-sidebar__new:hover {
-  background: var(--accent-soft);
 }
 
 .conversation-sidebar__list {
