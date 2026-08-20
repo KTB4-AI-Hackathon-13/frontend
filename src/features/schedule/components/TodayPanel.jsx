@@ -1,9 +1,10 @@
 import {
   ITEM_STATUS,
   ITEM_STATUS_LABEL,
+  ITEM_PRIORITY_LABEL,
   STANDALONE_ITEM_LABEL,
-  categoryLabelFor,
   colorForSchedule,
+  itemTypeLabelFor,
 } from '../utils/constants.js'
 import { formatDateLong } from '../utils/date.js'
 import { orderScheduleItems } from '../utils/items.js'
@@ -56,7 +57,7 @@ function TodayPanel({
           const cancelled = st === ITEM_STATUS.CANCELLED
           const inactive = st === ITEM_STATUS.SKIPPED || cancelled
           const isPending = pending.has(it.id)
-          const category = categoryLabelFor(it.categoryId)
+          const itemType = itemTypeLabelFor(it.itemType)
           return (
             <li
               key={it.id}
@@ -87,9 +88,9 @@ function TodayPanel({
                 <span className="today__schedule">
                   {[
                     it.scheduleTitle ?? STANDALONE_ITEM_LABEL,
-                    category,
+                    itemType,
                     it.estimatedMinutes ? `예상 ${it.estimatedMinutes}분` : null,
-                    it.workload != null ? `작업량 ${it.workload}` : null,
+                    it.priority ? `우선순위 ${ITEM_PRIORITY_LABEL[it.priority]}` : null,
                   ]
                     .filter(Boolean)
                     .join(' · ')}

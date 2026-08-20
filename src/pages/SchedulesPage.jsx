@@ -8,6 +8,7 @@ import ScheduleCreateForm from '../features/schedule/components/ScheduleCreateFo
 import ScheduleModal from '../features/schedule/components/ScheduleModal.jsx'
 import { useCursorList } from '../features/schedule/hooks/useCursorList.js'
 import { useInfiniteScroll } from '../features/schedule/hooks/useInfiniteScroll.js'
+import { useAsync } from '../features/schedule/hooks/useAsync.js'
 import {
   SCHEDULE_STATUS,
   SCHEDULE_STATUS_LABEL,
@@ -15,6 +16,7 @@ import {
 } from '../features/schedule/utils/constants.js'
 import { formatPeriod } from '../features/schedule/utils/date.js'
 import ErrorNotice from '../shared/components/ErrorNotice.jsx'
+import { fetchCategories } from '../shared/api/categoryApi.js'
 
 /** 한 페이지 크기 (1~100). seed 가 적어 무한 스크롤을 확인하려면 .env 에 VITE_SCHEDULE_PAGE_SIZE=1 */
 const PAGE_SIZE = Number(import.meta.env.VITE_SCHEDULE_PAGE_SIZE) || 20
@@ -44,6 +46,7 @@ function SchedulesPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [createError, setCreateError] = useState(null)
   const [creating, setCreating] = useState(false)
+  const categories = useAsync(fetchCategories, [], { keepData: true })
   const fetchPage = useCallback(
     (cursor) => fetchSchedules({ status: status || undefined, size: PAGE_SIZE, cursor }),
     [status],
@@ -173,6 +176,7 @@ function SchedulesPage() {
         <ScheduleModal
           key={selected.id}
           schedule={selected}
+          categories={categories.data ?? []}
           onClose={() => setSelected(null)}
           onChanged={reload}
         />
@@ -181,6 +185,7 @@ function SchedulesPage() {
       {createOpen && (
         <Modal title="직접 계획 추가" onClose={() => setCreateOpen(false)}>
           <ScheduleCreateForm
+            categories={categories.data ?? []}
             onSubmit={handleCreate}
             onCancel={() => setCreateOpen(false)}
             serverError={createError}

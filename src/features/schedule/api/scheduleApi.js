@@ -7,7 +7,6 @@
  *    같은 날짜 안 정렬은 서버가 준 순서(position → priority → id)를 그대로 쓴다.
  */
 import client from '../../../shared/api/client.js'
-import { STANDALONE_ITEM_DEFAULTS } from '../utils/constants.js'
 
 /** @typedef {import('./types.js').ScheduleSummary} ScheduleSummary */
 /** @typedef {import('./types.js').ScheduleDetail} ScheduleDetail */
@@ -69,14 +68,6 @@ export function deleteSchedule(scheduleId) {
 }
 
 /**
- * AI 화면에서 받은 원본 JSON(summary, daily_tasks)을 확정 저장한다.
- * 성공하면 해당 DRAFT 스케줄이 ACTIVE가 되며 홈 GET /calendar 조회에 포함된다.
- */
-export function submitAiPlan(scheduleId, aiPlanJson) {
-  return client.post(`/schedules/${scheduleId}/ai-plan`, aiPlanJson)
-}
-
-/**
  * 4.5 월별 캘린더 `GET /calendar?year&month` — 작업 있는 날짜만, 여러 스케줄 섞여 옴
  * @returns {Promise<CalendarResponse>}
  */
@@ -105,15 +96,13 @@ export async function fetchToday() {
 /**
  * 5.1 추가: 계획 소속이면 `POST /schedules/{scheduleId}/items`, 단독 작업이면
  * `POST /schedule-items` → 201
- * body: title, scheduledDate, estimatedMinutes, description?, categoryId?, workload?,
- *       priority?, position?
- * 단독 작업은 카테고리와 작업량을 null로 강제 정규화한다.
+ * body: title, scheduledDate, estimatedMinutes, itemType, description?, priority?, position?
  * 422 DATE_OUTSIDE_SCHEDULE_PERIOD / 422 MAX_DAILY_TASKS_EXCEEDED / 400 INVALID_REQUEST
  * @returns {Promise<ScheduleItem>}
  */
 export function createItem(scheduleId, body) {
   if (scheduleId == null) {
-    return client.post('/schedule-items', compact({ ...body, ...STANDALONE_ITEM_DEFAULTS }))
+    return client.post('/schedule-items', compact(body))
   }
   return client.post(`/schedules/${scheduleId}/items`, compact(body))
 }

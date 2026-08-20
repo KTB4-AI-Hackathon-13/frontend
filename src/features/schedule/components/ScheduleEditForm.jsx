@@ -19,6 +19,7 @@ import { daysBetween, formatDot } from '../utils/date.js'
  */
 function ScheduleEditForm({
   schedule,
+  categories = [],
   itemPeriod,
   onSubmit,
   onCancel,
@@ -29,6 +30,7 @@ function ScheduleEditForm({
     title: schedule.title,
     startDate: schedule.startDate,
     endDate: schedule.endDate,
+    categoryId: schedule.categoryId == null ? '' : String(schedule.categoryId),
   })
   const [error, setError] = useState(null)
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -71,6 +73,10 @@ function ScheduleEditForm({
     if (title !== schedule.title) patch.title = title
     if (form.startDate !== schedule.startDate) patch.startDate = form.startDate
     if (form.endDate !== schedule.endDate) patch.endDate = form.endDate
+    if (form.categoryId !== String(schedule.categoryId ?? '')) {
+      if (form.categoryId === '') return setError('기존 카테고리는 빈 값으로 변경할 수 없습니다.')
+      patch.categoryId = Number(form.categoryId)
+    }
     if (Object.keys(patch).length === 0) return setError('변경된 내용이 없습니다.')
 
     setError(null)
@@ -83,6 +89,22 @@ function ScheduleEditForm({
         <span className="field__label">계획 이름</span>
         <input className="input" value={form.title} onChange={update('title')} maxLength={200} />
         {fieldErrors.title && <span className="field__error">{fieldErrors.title}</span>}
+      </label>
+      <label className="field">
+        <span className="field__label">카테고리</span>
+        <select className="select" value={form.categoryId} onChange={update('categoryId')}>
+          {schedule.categoryId == null && <option value="">미분류</option>}
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+          {schedule.categoryId != null &&
+            !categories.some((category) => category.id === schedule.categoryId) && (
+              <option value={schedule.categoryId}>현재 카테고리</option>
+            )}
+        </select>
+        {fieldErrors.categoryId && <span className="field__error">{fieldErrors.categoryId}</span>}
       </label>
       <div className="field-row">
         <label className="field">

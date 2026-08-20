@@ -1,8 +1,9 @@
 import {
   ITEM_STATUS,
+  ITEM_PRIORITY_LABEL,
   STANDALONE_ITEM_LABEL,
-  categoryLabelFor,
   colorForSchedule,
+  itemTypeLabelFor,
 } from '../utils/constants.js'
 import { WEEKDAY_LABELS_MON_FIRST, buildMonthGridMonFirst } from '../utils/date.js'
 import { orderScheduleItems } from '../utils/items.js'
@@ -11,10 +12,9 @@ const itemTooltip = (item) =>
   [
     item.scheduleTitle ?? STANDALONE_ITEM_LABEL,
     item.title,
-    categoryLabelFor(item.categoryId),
+    itemTypeLabelFor(item.itemType),
     item.estimatedMinutes ? `예상 ${item.estimatedMinutes}분` : null,
-    item.priority ? `우선순위 ${item.priority}` : null,
-    item.workload != null ? `작업량 ${item.workload}` : null,
+    item.priority ? `우선순위 ${ITEM_PRIORITY_LABEL[item.priority] ?? item.priority}` : null,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -23,7 +23,8 @@ const groupBySchedule = (items = []) =>
   Array.from(
     orderScheduleItems(items)
       .reduce((groups, item) => {
-        const key = item.scheduleId == null ? `standalone-${item.id}` : `schedule-${item.scheduleId}`
+        const key =
+          item.scheduleId == null ? `standalone-${item.id}` : `schedule-${item.scheduleId}`
         const group = groups.get(key) ?? {
           key,
           scheduleId: item.scheduleId,
@@ -113,7 +114,8 @@ function MonthCalendar({ year, month, days = [], today, selectedDate, onSelectDa
                   const previousDate = idx % 7 > 0 ? cells[idx - 1] : null
                   const nextDate = idx % 7 < 6 ? cells[idx + 1] : null
                   const continuesBefore = Boolean(
-                    previousDate && groupsByDate[previousDate]?.some((item) => item.key === laneKey),
+                    previousDate &&
+                    groupsByDate[previousDate]?.some((item) => item.key === laneKey),
                   )
                   const continuesAfter = Boolean(
                     nextDate && groupsByDate[nextDate]?.some((item) => item.key === laneKey),
