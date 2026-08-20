@@ -4,6 +4,7 @@ import AppLayout from './layouts/AppLayout.jsx'
 import HomePage from '../pages/HomePage.jsx'
 import RankingsPage from '../pages/RankingsPage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
+import PuzzlesPage from '../pages/PuzzlesPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import SignupPage from '../pages/SignupPage.jsx'
 import SwitchUserPage from '../pages/SwitchUserPage.jsx'
@@ -21,7 +22,9 @@ function App() {
         <Route path="/rankings" element={<RankingsPage />} />
         <Route path="/switch-user" element={<SwitchUserPage />} />
         <Route path="/schedules/:scheduleId" element={<Navigate to="/schedules" replace />} />
-        {/* 다른 담당자 라우트 (AI 대화, 내 퍼즐, 갤러리, 설정)는 여기에 추가 */}
+        {/* 08 내 퍼즐 — 카드 클릭 시 퍼즐 상세 모달 (7번 퍼즐 API) */}
+        <Route path="/puzzles" element={<PuzzlesPage />} />
+        {/* 다른 담당자 라우트 (AI 대화, 내 퍼즐, 갤러리, 랭킹, 설정)는 여기에 추가 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

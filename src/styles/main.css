@@ -1827,3 +1827,168 @@ button {
     display: none;
   }
 }
+
+/* =========================================================
+   퍼즐 (내 퍼즐 · 퍼즐판 · 상세 모달)
+   ========================================================= */
+
+/* 퍼즐판 — 직소 조각(SVG clip-path). 획득한 조각만 그림이 보인다 */
+.pboard {
+  position: relative;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 2px;
+  max-width: 100%;
+}
+.pboard.is-complete {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.pboard__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.pboard__hole {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.pboard__filled {
+  fill: var(--accent);
+  fill-opacity: 0.5;
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+
+.pboard__outline {
+  fill: transparent;
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  stroke-opacity: 0.55;
+  transition: stroke-opacity 0.15s;
+  cursor: default;
+}
+.pboard__outline.is-earned:hover {
+  stroke: var(--accent);
+  stroke-opacity: 1;
+  stroke-width: 2.5;
+}
+.pboard.is-complete .pboard__filled {
+  fill: var(--accent);
+  fill-opacity: 0.5;
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+
+.pboard__outline {
+  stroke-opacity: 0.18;
+}
+.pboard__num {
+  fill: var(--muted);
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* 내 퍼즐 카드 그리드 */
+.pgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 4px;
+}
+.pcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.12s,
+    transform 0.12s;
+}
+.pcard:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.pcard__thumb {
+  display: grid;
+  place-items: center;
+}
+.pcard__thumb .pboard {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+.pcard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.pcard__titleline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pcard__title {
+  font-weight: 600;
+}
+.pcard__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pcard__action {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* 퍼즐 상세 모달 */
+.pdetail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.pdetail__board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.pdetail__hint {
+  max-width: 320px;
+  text-align: center;
+  min-height: 32px;
+}
+.pdetail__info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.pdetail__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .pdetail {
+    grid-template-columns: 1fr;
+  }
+}
