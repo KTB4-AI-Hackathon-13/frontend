@@ -76,7 +76,8 @@ client.interceptors.response.use(
           })
 
     // 세션 만료만 로그인 화면으로. 로그인 실패(INVALID_CREDENTIALS)도 401 이지만 그 폼에서 처리해야 한다.
-    if (AUTH_REQUIRED_CODES.has(apiError.code)) {
+    // suppressAuthEvent 를 준 요청(예: 퍼즐 이미지 조회)은 실패해도 화면을 튕기지 않는다.
+    if (AUTH_REQUIRED_CODES.has(apiError.code) && !err.config?.suppressAuthEvent) {
       authEvents.dispatchEvent(new Event(AUTH_EVENT_UNAUTHORIZED))
     }
     return Promise.reject(apiError)
