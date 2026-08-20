@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import {
-  fetchRankings,
-  RANKING_PERIOD,
-  RANKING_TYPE,
-} from '../features/ranking/api/rankingApi.js'
+import { fetchRankings, RANKING_PERIOD, RANKING_TYPE } from '../features/ranking/api/rankingApi.js'
 import { useAsync } from '../features/schedule/hooks/useAsync.js'
 import ErrorNotice from '../shared/components/ErrorNotice.jsx'
 
@@ -61,7 +57,11 @@ function RankingRows({ items, type }) {
     <ol className="ranking__list">
       {items.map((item) => (
         <li className={`ranking__row ${item.rank <= 3 ? 'is-podium' : ''}`} key={item.userId}>
-          <Link to={toPuzzleBy(item)} className="ranking__row-link" aria-label={`${item.nickname} 퍼즐 보기`}>
+          <Link
+            to={toPuzzleBy(item)}
+            className="ranking__row-link"
+            aria-label={`${item.nickname} 퍼즐 보기`}
+          >
             <div className="ranking__position">
               <RankBadge rank={item.rank} />
             </div>
