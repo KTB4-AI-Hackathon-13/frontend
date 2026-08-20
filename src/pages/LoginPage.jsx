@@ -52,9 +52,9 @@ function LoginPage() {
       eyebrow="WELCOME BACK"
       title={
         <>
-          PICK UP
+          TURN YOUR PLAN
           <br />
-          WHERE YOU LEFT OFF.
+          INTO ACTION.
         </>
       }
       description="오늘의 계획을 이어가세요."
@@ -96,7 +96,7 @@ function LoginPage() {
         </button>
       </form>
       <p className="auth-switch">
-        AI Planner가 처음인가요? <Link to="/signup">계정 만들기</Link>
+        JustDO가 처음인가요? <Link to="/signup">계정 만들기</Link>
       </p>
       <Toast toast={toast} />
     </AuthShell>

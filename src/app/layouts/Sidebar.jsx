@@ -23,7 +23,7 @@ function Sidebar({ isOpen, user, isLoadingUser }) {
   return (
     <aside id="app-sidebar" className={`sidebar ${isOpen ? 'is-open' : 'is-closed'}`}>
       <nav className="sidebar__nav">
-        <span className="sidebar__nav-label">PLANNER</span>
+        <span className="sidebar__nav-label">JUSTDO</span>
         {NAV.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `sidebar__link ${isActive ? 'is-active' : ''}`}>
             <NavIcon name={item.icon} />
