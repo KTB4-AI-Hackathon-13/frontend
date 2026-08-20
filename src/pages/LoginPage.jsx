@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import AuthField from '../features/auth/AuthField.jsx'
 import AuthShell from '../features/auth/AuthShell.jsx'
+import { useAuth } from '../features/auth/useAuth.js'
 import { login } from '../features/auth/authApi.js'
 
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { refreshUser } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -23,6 +25,7 @@ function LoginPage() {
     setSubmitting(true)
     try {
       await login(form)
+      await refreshUser()
       navigate('/', { replace: true })
     } catch (requestError) {
       setError(requestError.message || '로그인에 실패했습니다.')

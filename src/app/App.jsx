@@ -5,6 +5,7 @@ import HomePage from '../pages/HomePage.jsx'
 import SchedulesPage from '../pages/SchedulesPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import SignupPage from '../pages/SignupPage.jsx'
+import MyPage from '../pages/MyPage.jsx'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/schedules/:scheduleId" element={<Navigate to="/schedules" replace />} />
         {/* 다른 담당자 라우트 (AI 대화, 내 퍼즐, 갤러리, 랭킹, 설정)는 여기에 추가 */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Route>
     </Routes>
   )
